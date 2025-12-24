@@ -1,0 +1,7 @@
+{
+  "name": "Gesture AR Shooter",
+  "description": "A crash-safe, gesture-controlled AR shooting game using Three.js and MediaPipe Hands.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

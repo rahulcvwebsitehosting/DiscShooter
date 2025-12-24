@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gesture AR Shooter</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        /* Fullscreen Canvas */
+        #output_canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Hidden Video Element for Processing */
+        #input_video {
+            display: none;
+        }
+
+        /* Loading Overlay */
+        #loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #0ff;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top: 5px solid #0ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #status-text {
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        #start-btn {
+            padding: 12px 30px;
+            background: transparent;
+            border: 2px solid #0ff;
+            color: #0ff;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            opacity: 0.5;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        #start-btn.ready {
+            opacity: 1;
+            pointer-events: auto;
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        #start-btn.ready:hover {
+            background: #0ff;
+            color: #000;
+        }
+
+        /* HUD Overlay */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .score-board {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+            color: #fff;
+            text-shadow: 0 0 10px #00aaff;
+        }
+        
+        .score-val {
+            font-size: 3rem;
+            font-weight: 900;
+            line-height: 1;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        .score-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .level-board {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #ffcc00;
+            text-shadow: 0 0 10px #ffcc00;
+        }
+
+        .level-val {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .floating-text {
+            position: absolute;
+            font-weight: 900;
+            font-size: 2rem;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            animation: floatUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: none;
+            font-style: italic;
+            white-space: nowrap;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 30px;
+            border-radius: 30px;
+            pointer-events: none;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- MediaPipe Dependencies (Version Locked) -->
+    <script src="https://unpkg.com/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@mediapipe/drawing_utils@0.3.1640029074/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <!-- DOM Elements -->
+    <div id="loader">
+        <div class="loader-spinner"></div>
+        <div id="status-text">Initializing Engine...</div>
+        <button id="start-btn">Start Game</button>
+    </div>
+
+    <div id="hud">
+        <div class="level-board">
+            <div style="font-size: 0.8rem; opacity: 0.8;">DIFFICULTY</div>
+            <div class="level-val" id="level-display">LVL 1</div>
+        </div>
+        <div class="score-board">
+            <div class="score-label">Score</div>
+            <div class="score-val" id="score-display">0000</div>
+        </div>
+    </div>
+
+    <div id="instructions">
+        ✋ Aim with Index Finger<br>
+        👍 Bend Thumb to Shoot<br>
+        🟡 Shoot Gold Orbs for Bonus!
+    </div>
+
+    <video id="input_video" playsinline muted></video>
+    <canvas id="output_canvas"></canvas>
+
+    <script>
+        /**
+         * ------------------------------------------------------------------
+         * CONFIGURATION & CONSTANTS
+         * ------------------------------------------------------------------
+         */
+        const CONFIG = {
+            AI_FPS: 20,          
+            MAX_DISCS: 4,
+            BASE_SPEED: 0.03,
+            MAGNETISM_RADIUS: 0.5,
+            TRIGGER_THRESHOLD: 0.07, 
+            TRIGGER_DEBOUNCE: 250, 
+            LASER_COLOR: 0xff0055,
+            RETICLE_COLOR: 0x00ffcc,
+            FACING_MODE: 'user', // Use front camera for mirror effect
+            POINTS_PER_LEVEL: 1000,
+            BONUS_CHANCE: 0.2 // 20% chance for gold orb
+        };
+
+        /**
+         * ------------------------------------------------------------------
+         * GLOBAL STATE
+         * ------------------------------------------------------------------
+         */
+        const state = {
+            isLoading: true,
+            isPlaying: false,
+            score: 0,
+            level: 1,
+            speedMultiplier: 1.0,
+            lastAiTime: 0,
+            lastTriggerTime: 0,
+            isTriggerDown: false,
+            hand: null, 
+            discs: [],
+            shards: [],
+            particles: [],
+            screenShake: 0
+        };
+
+        const els = {
+            video: document.getElementById('input_video'),
+            canvas: document.getElementById('output_canvas'),
+            loader: document.getElementById('loader'),
+            status: document.getElementById('status-text'),
+            startBtn: document.getElementById('start-btn'),
+            hud: document.getElementById('hud'),
+            score: document.getElementById('score-display'),
+            level: document.getElementById('level-display')
+        };
+
+        let camera, scene, renderer, videoTexture;
+        let laserLine, reticleMesh, muzzleFlashMesh;
+        let aimRay = new THREE.Raycaster();
+        let audioCtx;
+
+        // Texture Assets (Procedural)
+        let glowTex, smokeTex, sparkTex, hardSparkTex;
+
+        /**
+         * ------------------------------------------------------------------
+         * GAME LOGIC: SCORING
+         * ------------------------------------------------------------------
+         */
+        function addScore(points) {
+            state.score += points;
+            
+            // Format score with leading zeros
+            els.score.innerText = state.score.toString().padStart(4, '0');
+
+            // Level Up Check
+            const newLevel = Math.floor(state.score / CONFIG.POINTS_PER_LEVEL) + 1;
+            if (newLevel > state.level) {
+                state.level = newLevel;
+                state.speedMultiplier = 1.0 + ((state.level - 1) * 0.15); // 15% faster per level
+                els.level.innerText = "LVL " + state.level;
+                
+                showFeedback(window.innerWidth/2, window.innerHeight/2, "LEVEL UP!", "#ffcc00");
+                AudioSys.playTone(600, 'sine', 0.5, 0.2);
+            }
+        }
+
+        /**
+         * ------------------------------------------------------------------
+         * TEXTURE GENERATION (No external assets)
+         * ------------------------------------------------------------------
+         */
+        function createGradientTexture(colorStops) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            for(let stop of colorStops) grad.addColorStop(stop[0], stop[1]);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 64, 64);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function initTextures() {
+            glowTex = createGradientTexture([[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,0.2)'], [1, 'rgba(0,0,0,0)']]);
+            smokeTex = createGradientTexture([[0, 'rgba(200,200,200,0.5)'], [1, 'rgba(0,0,0,0)']]);
+            sparkTex = createGradientTexture([[0, 'white'], [0.5, 'yellow'], [1, 'transparent']]);
+            hardSparkTex = createGradientTexture([[0, 'white'], [0.2, '#ffeeaa'], [1, 'transparent']]);
+        }
+
+        /**
+         * ------------------------------------------------------------------
+         * AUDIO SYSTEM
+         * ------------------------------------------------------------------
+         */
+        const AudioSys = {
+            init: () => {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            },
+            playTone: (freq, type, dur, vol = 0.1) => {
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq/4, audioCtx.currentTime + dur);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + dur + 0.1);
+            },
+            playShoot: () => AudioSys.playTone(800, 'sawtooth', 0.15, 0.05),
+            playHit: () => {
+                AudioSys.playTone(200, 'square', 0.1, 0.1);
+                setTimeout(() => AudioSys.playTone(100, 'sawtooth', 0.2, 0.1), 50);
+            },
+            playBonus: () => {
+                AudioSys.playTone(1200, 'sine', 0.1, 0.1);
+                setTimeout(() => AudioSys.playTone(1800, 'sine', 0.3, 0.1), 100);
+            }
+        };
+
+        /**
+         * ------------------------------------------------------------------
+         * THREE.JS SETUP
+         * ------------------------------------------------------------------
+         */
+        function initThree() {
+            initTextures();
+            scene = new THREE.Scene();
+
+            const aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 100);
+            camera.position.z = 5;
+
+            renderer = new THREE.WebGLRenderer({ canvas: els.canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.outputEncoding = THREE.sRGBEncoding;
+
+            // Lighting
+            const ambient = new THREE.AmbientLight(0x404040, 1);
+            scene.add(ambient);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+            dirLight.position.set(0, 10, 10);
+            scene.add(dirLight);
+            const pointLight = new THREE.PointLight(0x00ccff, 1, 10);
+            pointLight.position.set(0, 0, 5);
+            scene.add(pointLight);
+
+            // Video Background (Mirrored)
+            videoTexture = new THREE.VideoTexture(els.video);
+            videoTexture.encoding = THREE.sRGBEncoding;
+            videoTexture.minFilter = THREE.LinearFilter;
+            // Mirror logic: Center rotation and scale negative x
+            videoTexture.center.set(0.5, 0.5);
+            videoTexture.repeat.set(-1, 1); // FLIP HORIZONTALLY
+            scene.background = videoTexture;
+
+            // Reticle
+            const reticleGeo = new THREE.RingGeometry(0.08, 0.1, 32);
+            const reticleMat = new THREE.MeshBasicMaterial({ color: CONFIG.RETICLE_COLOR, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+            reticleMesh = new THREE.Mesh(reticleGeo, reticleMat);
+            reticleMesh.add(new THREE.Mesh(new THREE.CircleGeometry(0.02, 16), reticleMat)); // Dot
+            reticleMesh.visible = false;
+            scene.add(reticleMesh);
+
+            // Laser
+            const laserGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-10)]);
+            const laserMat = new THREE.LineBasicMaterial({ color: CONFIG.LASER_COLOR, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
+            laserLine = new THREE.Line(laserGeo, laserMat);
+            laserLine.visible = false;
+            scene.add(laserLine);
+
+            // Muzzle Flash Sprite
+            const flashMat = new THREE.SpriteMaterial({ map: sparkTex, color: 0xffaa00, blending: THREE.AdditiveBlending, transparent: true });
+            muzzleFlashMesh = new THREE.Sprite(flashMat);
+            muzzleFlashMesh.scale.set(0,0,0);
+            scene.add(muzzleFlashMesh);
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        /**
+         * ------------------------------------------------------------------
+         * VFX SYSTEM
+         * ------------------------------------------------------------------
+         */
+        class Particle {
+            constructor(type, pos, color) {
+                // type: 0=Explosion, 1=Smoke, 2=Sparkle
+                this.type = type; 
+                this.life = 1.0;
+                
+                let map = smokeTex;
+                let blend = THREE.NormalBlending;
+                if (type === 0) { map = sparkTex; blend = THREE.AdditiveBlending; }
+                if (type === 2) { map = hardSparkTex; blend = THREE.AdditiveBlending; }
+
+                this.mesh = new THREE.Sprite(
+                    new THREE.SpriteMaterial({
+                        map: map,
+                        color: color,
+                        blending: blend,
+                        transparent: true
+                    })
+                );
+                this.mesh.position.copy(pos);
+                
+                let speed = 0.02;
+                if (type === 0) speed = 0.15;
+                if (type === 2) speed = 0.05;
+
+                this.velocity = new THREE.Vector3(
+                    (Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)
+                ).normalize().multiplyScalar(speed);
+                
+                let scale = 0.1;
+                if (type === 0) scale = 0.3;
+                if (type === 2) scale = 0.08;
+                this.mesh.scale.setScalar(scale);
+
+                scene.add(this.mesh);
+            }
+            update() {
+                this.mesh.position.add(this.velocity);
+                
+                if (this.type === 0) {
+                    this.life -= 0.05;
+                    this.mesh.scale.multiplyScalar(0.9);
+                } else if (this.type === 2) {
+                    this.life -= 0.03;
+                    this.velocity.y -= 0.001; // subtle gravity
+                } else {
+                    this.life -= 0.02;
+                    this.mesh.scale.multiplyScalar(1.05);
+                }
+
+                this.mesh.material.opacity = this.life;
+                
+                if (this.life <= 0) {
+                    scene.remove(this.mesh);
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        class Shard {
+            constructor(pos, color) {
+                const geo = new THREE.TetrahedronGeometry(0.15, 0);
+                const mat = new THREE.MeshStandardMaterial({ color: color, metalness: 0.9, roughness: 0.1, flatShading: true });
+                this.mesh = new THREE.Mesh(geo, mat);
+                this.mesh.position.copy(pos);
+                this.velocity = new THREE.Vector3(
+                    (Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)
+                ).normalize().multiplyScalar(0.1 + Math.random()*0.1);
+                this.rotSpeed = new THREE.Vector3(Math.random(), Math.random(), Math.random());
+                this.life = 1.0;
+                scene.add(this.mesh);
+            }
+            update() {
+                this.mesh.position.add(this.velocity);
+                this.mesh.rotation.x += this.rotSpeed.x;
+                this.mesh.rotation.y += this.rotSpeed.y;
+                this.velocity.y -= 0.005; // Gravity
+                this.life -= 0.02;
+                this.mesh.scale.setScalar(this.life);
+                if (this.life <= 0) {
+                    scene.remove(this.mesh);
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        function spawnExplosion(pos, isBonus) {
+            const color = isBonus ? 0xffdd00 : 0xffaa00;
+            const shardColor = isBonus ? 0xffff00 : 0x00aaff;
+
+            // Core flash
+            const flash = new Particle(0, pos, 0xffffff);
+            flash.mesh.scale.setScalar(isBonus ? 2.0 : 1.5);
+            state.particles.push(flash);
+
+            // Sparks
+            const count = isBonus ? 20 : 12;
+            for(let i=0; i<count; i++) {
+                state.particles.push(new Particle(0, pos, color));
+            }
+            
+            // Falling Sparkles for bonus
+            if (isBonus) {
+                 for(let i=0; i<10; i++) {
+                    state.particles.push(new Particle(2, pos, 0xffffaa));
+                }
+            }
+
+            // Shards
+            const shardCount = isBonus ? 10 : 6;
+            for(let i=0; i<shardCount; i++) {
+                state.shards.push(new Shard(pos, shardColor));
+            }
+        }
+
+        /**
+         * ------------------------------------------------------------------
+         * GAME ENTITIES
+         * ------------------------------------------------------------------
+         */
+        class Disc {
+            constructor() {
+                // Determine if this is a Bonus Disc (Gold)
+                this.isBonus = Math.random() < CONFIG.BONUS_CHANCE;
+                
+                const color = this.isBonus ? 0xffcc00 : 0x0088ff;
+                const emissive = this.isBonus ? 0xffaa00 : 0x002266;
+                const geoType = this.isBonus ? new THREE.IcosahedronGeometry(0.35, 1) : new THREE.TorusGeometry(0.3, 0.08, 16, 32);
+
+                const mat = new THREE.MeshStandardMaterial({ 
+                    color: color, 
+                    emissive: emissive,
+                    metalness: 0.9,
+                    roughness: 0.2
+                });
+                
+                this.mesh = new THREE.Mesh(geoType, mat);
+                
+                // Glow core
+                const coreGeo = new THREE.SphereGeometry(this.isBonus ? 0.2 : 0.15, 16, 16);
+                const coreMat = new THREE.MeshBasicMaterial({ color: this.isBonus ? 0xffffaa : 0x00ffff });
+                this.core = new THREE.Mesh(coreGeo, coreMat);
+                this.mesh.add(this.core);
+
+                // Outer Glow
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: this.isBonus ? 0xffaa00 : 0x00aaff, blending: THREE.AdditiveBlending }));
+                sprite.scale.setScalar(1.5);
+                this.mesh.add(sprite);
+
+                this.reset();
+                scene.add(this.mesh);
+            }
+
+            reset() {
+                // Re-roll bonus chance on respawn
+                this.isBonus = Math.random() < CONFIG.BONUS_CHANCE;
+                const color = this.isBonus ? 0xffcc00 : 0x0088ff;
+                const emissive = this.isBonus ? 0xffaa00 : 0x002266;
+                this.mesh.material.color.setHex(color);
+                this.mesh.material.emissive.setHex(emissive);
+                this.core.material.color.setHex(this.isBonus ? 0xffffaa : 0x00ffff);
+                
+                // Change geometry visually if needed (ThreeJS swap geometry is expensive, so we just stick to material change or pre-build logic, for simplicity we kept geometry static but swapped color)
+                // Actually, let's just use Scale to differentiate shape slightly
+                if (this.isBonus) {
+                    this.mesh.scale.setScalar(1.2);
+                    this.mesh.children[1].material.color.setHex(0xffaa00); // Glow
+                } else {
+                    this.mesh.scale.setScalar(1.0);
+                    this.mesh.children[1].material.color.setHex(0x00aaff); // Glow
+                }
+
+                const side = Math.floor(Math.random() * 4);
+                const spread = 7;
+                let x, y;
+                switch(side) {
+                    case 0: x = -spread; y = (Math.random()-0.5)*spread; break;
+                    case 1: x = spread; y = (Math.random()-0.5)*spread; break;
+                    case 2: x = (Math.random()-0.5)*spread; y = spread; break;
+                    case 3: x = (Math.random()-0.5)*spread; y = -spread; break;
+                }
+                this.mesh.position.set(x, y, 0);
+                
+                // Speed depends on level
+                const speedBase = CONFIG.BASE_SPEED * state.speedMultiplier;
+                // Bonus items move slightly faster
+                const finalSpeed = this.isBonus ? speedBase * 1.5 : speedBase;
+
+                const target = new THREE.Vector3((Math.random()-0.5)*3, (Math.random()-0.5)*3, 0);
+                this.velocity = target.sub(this.mesh.position).normalize().multiplyScalar(finalSpeed + Math.random()*0.02);
+                
+                this.rotAxis = new THREE.Vector3(Math.random(), Math.random(), 0).normalize();
+                this.rotSpeed = 0.1 + Math.random() * 0.1;
+                
+                this.active = true;
+                this.mesh.visible = true;
+            }
+
+            update() {
+                if (!this.active) return;
+                this.mesh.position.add(this.velocity);
+                this.mesh.rotateOnAxis(this.rotAxis, this.rotSpeed);
+
+                // Smoke trail (Gold for bonus, Grey for normal)
+                if (Math.random() > 0.6) {
+                    const col = this.isBonus ? 0xffaa00 : 0xaaaaaa;
+                    // Type 2 is sparkle, Type 1 is smoke. Mix them for bonus.
+                    const pType = (this.isBonus && Math.random() > 0.5) ? 2 : 1;
+                    state.particles.push(new Particle(pType, this.mesh.position.clone(), col));
+                }
+
+                if (this.mesh.position.length() > 12) this.reset();
+            }
+            
+            hit() {
+                this.active = false;
+                this.mesh.visible = false;
+                
+                spawnExplosion(this.mesh.position, this.isBonus);
+                
+                if (this.isBonus) {
+                    AudioSys.playBonus();
+                    addScore(500);
+                } else {
+                    AudioSys.playHit();
+                    addScore(100);
+                }
+                
+                state.screenShake = 0.3;
+                setTimeout(() => this.reset(), 800);
+            }
+        }
+
+        /**
+         * ------------------------------------------------------------------
+         * MEDIAPIPE LOGIC
+         * ------------------------------------------------------------------
+         */
+        async function initMediaPipe() {
+            try {
+                els.status.innerText = "Loading Hand Model...";
+                
+                const hands = new Hands({locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`});
+                hands.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.6, // Higher confidence for better tracking
+                    minTrackingConfidence: 0.6
+                });
+                hands.onResults(onHandsResults);
+
+                // Use Front Camera ('user') for Mirror experience
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: CONFIG.FACING_MODE
+                    }
+                });
+                
+                els.video.srcObject = stream;
+                await els.video.play();
+
+                els.status.innerText = "Warming up...";
+                await hands.send({image: els.video});
+                
+                els.status.innerText = "System Ready";
+                els.startBtn.classList.add('ready');
+                els.startBtn.onclick = () => {
+                    AudioSys.init();
+                    els.loader.style.opacity = 0;
+                    setTimeout(() => els.loader.remove(), 500);
+                    
+                    for(let i=0; i<CONFIG.MAX_DISCS; i++) state.discs.push(new Disc());
+                    
+                    state.isPlaying = true;
+                    requestAnimationFrame(renderLoop);
+                    processVideoLoop(hands);
+                };
+
+            } catch (e) {
+                console.error(e);
+                els.status.innerText = "Error: " + e.message;
+            }
+        }
+
+        async function processVideoLoop(hands) {
+            if (!state.isPlaying) return;
+            const now = Date.now();
+            if (now - state.lastAiTime >= (1000 / CONFIG.AI_FPS)) {
+                state.lastAiTime = now;
+                try { await hands.send({image: els.video}); } catch (e) {}
+            }
+            requestAnimationFrame(() => processVideoLoop(hands));
+        }
+
+        function onHandsResults(results) {
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const indexTip = landmarks[8];
+                const indexMCP = landmarks[5];
+                const thumbTip = landmarks[4];
+
+                // CORRECTION FOR MIRROR MODE:
+                const handX = 1 - indexTip.x; 
+                const handY = indexTip.y; 
+
+                state.hand = { x: handX, y: handY };
+
+                // Trigger Logic
+                const dist = Math.hypot(thumbTip.x - indexMCP.x, thumbTip.y - indexMCP.y);
+                const now = Date.now();
+                
+                if (dist < CONFIG.TRIGGER_THRESHOLD) {
+                    if (!state.isTriggerDown && (now - state.lastTriggerTime > CONFIG.TRIGGER_DEBOUNCE)) {
+                        fireShot();
+                        state.lastTriggerTime = now;
+                    }
+                    state.isTriggerDown = true;
+                } else {
+                    state.isTriggerDown = false;
+                }
+            } else {
+                state.hand = null;
+            }
+        }
+
+        function fireShot() {
+            if (!state.hand) return;
+            
+            // Muzzle Flash Effect
+            muzzleFlashMesh.position.copy(reticleMesh.position);
+            muzzleFlashMesh.position.z += 0.5;
+            muzzleFlashMesh.scale.set(0.8, 0.8, 0.8);
+
+            // Raycast
+            const aimPos = reticleMesh.position.clone();
+            const reticleScreen = aimPos.clone().project(camera);
+            
+            let hit = false;
+            for (const disc of state.discs) {
+                if (!disc.active) continue;
+                const discScreen = disc.mesh.position.clone().project(camera);
+                const dist = new THREE.Vector2(reticleScreen.x, reticleScreen.y)
+                    .distanceTo(new THREE.Vector2(discScreen.x, discScreen.y));
+
+                // Bonus items might be smaller/harder to hit? No, keep same hitbox for fun
+                if (dist < 0.15) {
+                    disc.hit();
+                    hit = true;
+                    const pts = disc.isBonus ? "+500" : "+100";
+                    const col = disc.isBonus ? "#ffcc00" : "#00aaff";
+                    showFeedback(state.hand.x * window.innerWidth, state.hand.y * window.innerHeight, pts, col);
+                    break; 
+                }
+            }
+
+            if (!hit) {
+                AudioSys.playShoot();
+            }
+        }
+
+        function showFeedback(x, y, text, color) {
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = text;
+            el.style.color = color;
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            els.hud.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        /**
+         * ------------------------------------------------------------------
+         * MAIN LOOP
+         * ------------------------------------------------------------------
+         */
+        function renderLoop() {
+            requestAnimationFrame(renderLoop);
+
+            // Screen Shake
+            if (state.screenShake > 0) {
+                camera.position.x = (Math.random() - 0.5) * state.screenShake;
+                camera.position.y = (Math.random() - 0.5) * state.screenShake;
+                state.screenShake *= 0.85;
+                if (state.screenShake < 0.01) state.screenShake = 0;
+            }
+
+            // Update VFX
+            state.discs.forEach(d => d.update());
+            state.particles = state.particles.filter(p => p.update());
+            state.shards = state.shards.filter(s => s.update());
+            
+            // Muzzle Flash Decay
+            if (muzzleFlashMesh.scale.x > 0.01) {
+                muzzleFlashMesh.scale.multiplyScalar(0.7);
+                muzzleFlashMesh.material.opacity = muzzleFlashMesh.scale.x;
+            } else {
+                muzzleFlashMesh.scale.set(0,0,0);
+            }
+
+            // Aiming
+            if (state.hand) {
+                const ndcX = (state.hand.x * 2) - 1;
+                const ndcY = -(state.hand.y * 2) + 1;
+
+                aimRay.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+                const worldPos = camera.position.clone().add(aimRay.ray.direction.multiplyScalar(5)); 
+
+                // Magnetism
+                let finalPos = worldPos.clone();
+                let closestDist = Infinity;
+                let targetDisc = null;
+
+                state.discs.forEach(disc => {
+                    if (!disc.active) return;
+                    const d = worldPos.distanceTo(disc.mesh.position);
+                    if (d < closestDist) {
+                        closestDist = d;
+                        targetDisc = disc;
+                    }
+                });
+
+                if (targetDisc && closestDist < 2.5) {
+                    const strength = Math.max(0, (2.5 - closestDist) / 2.5);
+                    finalPos.lerp(targetDisc.mesh.position, strength * 0.3);
+                    reticleMesh.material.color.setHex(0xff0055); 
+                } else {
+                    reticleMesh.material.color.setHex(CONFIG.RETICLE_COLOR);
+                }
+
+                reticleMesh.position.lerp(finalPos, 0.4);
+                reticleMesh.visible = true;
+                reticleMesh.lookAt(camera.position);
+
+                // Laser
+                const shoulder = new THREE.Vector3(0, -3, 3);
+                const positions = laserLine.geometry.attributes.position.array;
+                positions[0] = shoulder.x; positions[1] = shoulder.y; positions[2] = shoulder.z;
+                positions[3] = reticleMesh.position.x; positions[4] = reticleMesh.position.y; positions[5] = reticleMesh.position.z;
+                laserLine.geometry.attributes.position.needsUpdate = true;
+                laserLine.visible = true;
+            } else {
+                reticleMesh.visible = false;
+                laserLine.visible = false;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        initThree();
+        initMediaPipe();
+
+    </script>
+</body>
+</html>
