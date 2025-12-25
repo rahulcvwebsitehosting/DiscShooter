@@ -216,17 +216,18 @@
          * ------------------------------------------------------------------
          */
         const CONFIG = {
-            AI_FPS: 20,          
+            AI_FPS: 30, // Increased to 30 for smoother tracking
             MAX_DISCS: 4,
             BASE_SPEED: 0.03,
             MAGNETISM_RADIUS: 0.5,
-            TRIGGER_THRESHOLD: 0.07, 
+            TRIGGER_SENSITIVITY: 0.4, // Relative threshold (dist < 40% of palm size)
             TRIGGER_DEBOUNCE: 250, 
             LASER_COLOR: 0xff0055,
             RETICLE_COLOR: 0x00ffcc,
-            FACING_MODE: 'user', // Use front camera for mirror effect
+            FACING_MODE: 'user', 
             POINTS_PER_LEVEL: 1000,
-            BONUS_CHANCE: 0.2 // 20% chance for gold orb
+            BONUS_CHANCE: 0.2,
+            SMOOTHING_FACTOR: 0.25 // Factor for Linear Interpolation (0.1 = slow/smooth, 0.9 = fast/jittery)
         };
 
         /**
@@ -243,7 +244,8 @@
             lastAiTime: 0,
             lastTriggerTime: 0,
             isTriggerDown: false,
-            hand: null, 
+            targetHand: null, // Raw input from AI
+            hand: null,       // Smoothed position for rendering
             discs: [],
             shards: [],
             particles: [],
@@ -365,7 +367,8 @@
 
             renderer = new THREE.WebGLRenderer({ canvas: els.canvas, alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            // Optimization: Cap Pixel Ratio at 1 for performance
+            renderer.setPixelRatio(1);
             renderer.outputEncoding = THREE.sRGBEncoding;
 
             // Lighting
@@ -667,17 +670,16 @@
                 const hands = new Hands({locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`});
                 hands.setOptions({
                     maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.6, // Higher confidence for better tracking
-                    minTrackingConfidence: 0.6
+                    modelComplexity: 0, // Lite model is faster
+                    minDetectionConfidence: 0.5, // Lowered for better movement tracking
+                    minTrackingConfidence: 0.5
                 });
                 hands.onResults(onHandsResults);
 
-                // Use Front Camera ('user') for Mirror experience
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: {
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 },
+                        width: { ideal: 640 }, // Keep resolution manageable for speed
+                        height: { ideal: 480 },
                         facingMode: CONFIG.FACING_MODE
                     }
                 });
@@ -699,7 +701,7 @@
                     
                     state.isPlaying = true;
                     requestAnimationFrame(renderLoop);
-                    processVideoLoop(hands);
+                    startVideoProcessing(hands);
                 };
 
             } catch (e) {
@@ -708,34 +710,66 @@
             }
         }
 
-        async function processVideoLoop(hands) {
-            if (!state.isPlaying) return;
-            const now = Date.now();
-            if (now - state.lastAiTime >= (1000 / CONFIG.AI_FPS)) {
-                state.lastAiTime = now;
-                try { await hands.send({image: els.video}); } catch (e) {}
+        // OPTIMIZED VIDEO LOOP using requestVideoFrameCallback
+        function startVideoProcessing(hands) {
+            const video = els.video;
+            
+            async function processFrame() {
+                if (!state.isPlaying) return;
+
+                // Only process if enough time has passed (Limit FPS to avoid CPU overload)
+                const now = Date.now();
+                if (now - state.lastAiTime >= (1000 / CONFIG.AI_FPS)) {
+                    state.lastAiTime = now;
+                    try {
+                        await hands.send({image: video});
+                    } catch(e) { /* ignore frame errors */ }
+                }
+
+                // Native browser optimization for video processing
+                if ('requestVideoFrameCallback' in video) {
+                    video.requestVideoFrameCallback(processFrame);
+                } else {
+                    requestAnimationFrame(processFrame);
+                }
             }
-            requestAnimationFrame(() => processVideoLoop(hands));
+            
+            if ('requestVideoFrameCallback' in video) {
+                video.requestVideoFrameCallback(processFrame);
+            } else {
+                requestAnimationFrame(processFrame);
+            }
         }
 
         function onHandsResults(results) {
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
                 const indexTip = landmarks[8];
-                const indexMCP = landmarks[5];
+                const indexMCP = landmarks[5]; // Knuckle
+                const wrist = landmarks[0];
                 const thumbTip = landmarks[4];
 
                 // CORRECTION FOR MIRROR MODE:
                 const handX = 1 - indexTip.x; 
                 const handY = indexTip.y; 
 
-                state.hand = { x: handX, y: handY };
+                // Store raw input separately
+                state.targetHand = { x: handX, y: handY };
 
-                // Trigger Logic
-                const dist = Math.hypot(thumbTip.x - indexMCP.x, thumbTip.y - indexMCP.y);
+                // Initial hand set
+                if (!state.hand) state.hand = { x: handX, y: handY };
+
+                // Adaptive Trigger Logic
+                // 1. Calculate Hand Size (Wrist to Index Knuckle)
+                const handSize = Math.hypot(indexMCP.x - wrist.x, indexMCP.y - wrist.y);
+                
+                // 2. Calculate Thumb "Closed" Distance (Thumb Tip to Index Knuckle)
+                const triggerDist = Math.hypot(thumbTip.x - indexMCP.x, thumbTip.y - indexMCP.y);
+
                 const now = Date.now();
                 
-                if (dist < CONFIG.TRIGGER_THRESHOLD) {
+                // Check against dynamic threshold
+                if (triggerDist < (handSize * CONFIG.TRIGGER_SENSITIVITY)) {
                     if (!state.isTriggerDown && (now - state.lastTriggerTime > CONFIG.TRIGGER_DEBOUNCE)) {
                         fireShot();
                         state.lastTriggerTime = now;
@@ -745,7 +779,7 @@
                     state.isTriggerDown = false;
                 }
             } else {
-                state.hand = null;
+                state.targetHand = null;
             }
         }
 
@@ -824,6 +858,16 @@
                 muzzleFlashMesh.scale.set(0,0,0);
             }
 
+            // SMOOTHING LOGIC (Lerp)
+            if (state.targetHand) {
+                if (!state.hand) {
+                    state.hand = { ...state.targetHand };
+                } else {
+                    state.hand.x = THREE.MathUtils.lerp(state.hand.x, state.targetHand.x, CONFIG.SMOOTHING_FACTOR);
+                    state.hand.y = THREE.MathUtils.lerp(state.hand.y, state.targetHand.y, CONFIG.SMOOTHING_FACTOR);
+                }
+            }
+
             // Aiming
             if (state.hand) {
                 const ndcX = (state.hand.x * 2) - 1;
@@ -855,6 +899,14 @@
                 }
 
                 reticleMesh.position.lerp(finalPos, 0.4);
+                
+                // Visual feedback for trigger press
+                if (state.isTriggerDown) {
+                    reticleMesh.scale.setScalar(0.6); // Shrink when triggered
+                } else {
+                    reticleMesh.scale.setScalar(1.0);
+                }
+
                 reticleMesh.visible = true;
                 reticleMesh.lookAt(camera.position);
 
