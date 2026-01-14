@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Gesture AR Shooter</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='50%25' cy='50%25' r='50%25'><stop offset='0%25' stop-color='%2300ffff' stop-opacity='1'/><stop offset='100%25' stop-color='%23000000' stop-opacity='0'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/><circle cx='32' cy='32' r='14' stroke='%23ffffff' stroke-width='3' fill='none'/><circle cx='32' cy='32' r='5' fill='%23ffffff'/></svg>">
     <style>
         body {
             margin: 0;
@@ -216,18 +217,23 @@
          * ------------------------------------------------------------------
          */
         const CONFIG = {
-            AI_FPS: 30, // Increased to 30 for smoother tracking
+            AI_FPS: 30, 
             MAX_DISCS: 4,
             BASE_SPEED: 0.03,
-            MAGNETISM_RADIUS: 0.5,
-            TRIGGER_SENSITIVITY: 0.4, // Relative threshold (dist < 40% of palm size)
-            TRIGGER_DEBOUNCE: 250, 
+            MAGNETISM_RADIUS: 3.5,    
+            MAGNETISM_STRENGTH: 0.5,  
+            HIT_RADIUS: 0.25,         
+            // TRIGGER REFINEMENT: Hysteresis & Sensitivity
+            TRIGGER_PRESS_THRESH: 0.28,   // Normalized Distance to Engage
+            TRIGGER_RELEASE_THRESH: 0.35, // Normalized Distance to Release
+            TRIGGER_SMOOTHING: 0.5,       // Lerp factor for input smoothing (1.0 = no smoothing)
+            TRIGGER_DEBOUNCE: 200,        // Reduced debounce slightly due to better detection
             LASER_COLOR: 0xff0055,
             RETICLE_COLOR: 0x00ffcc,
             FACING_MODE: 'user', 
             POINTS_PER_LEVEL: 1000,
             BONUS_CHANCE: 0.2,
-            SMOOTHING_FACTOR: 0.25 // Factor for Linear Interpolation (0.1 = slow/smooth, 0.9 = fast/jittery)
+            SMOOTHING_FACTOR: 0.35    
         };
 
         /**
@@ -244,8 +250,10 @@
             lastAiTime: 0,
             lastTriggerTime: 0,
             isTriggerDown: false,
-            targetHand: null, // Raw input from AI
-            hand: null,       // Smoothed position for rendering
+            triggerSmoothValue: 1.0, // New: for smoothing input
+            targetHand: null, 
+            hand: null,       
+            lockedTarget: null, 
             discs: [],
             shards: [],
             particles: [],
@@ -670,9 +678,10 @@
                 const hands = new Hands({locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`});
                 hands.setOptions({
                     maxNumHands: 1,
-                    modelComplexity: 0, // Lite model is faster
-                    minDetectionConfidence: 0.5, // Lowered for better movement tracking
-                    minTrackingConfidence: 0.5
+                    // UPGRADE: Use Full model for better accuracy at slight cost of performance
+                    modelComplexity: 1, 
+                    minDetectionConfidence: 0.6, 
+                    minTrackingConfidence: 0.6
                 });
                 hands.onResults(onHandsResults);
 
@@ -759,24 +768,51 @@
                 // Initial hand set
                 if (!state.hand) state.hand = { x: handX, y: handY };
 
-                // Adaptive Trigger Logic
-                // 1. Calculate Hand Size (Wrist to Index Knuckle)
+                // ----------------------------------------------------------------
+                // REFINED TRIGGER LOGIC
+                // ----------------------------------------------------------------
+                
+                // 1. Hand Size Reference (Wrist to Index Knuckle)
+                // This gives us a scale invariant metric.
                 const handSize = Math.hypot(indexMCP.x - wrist.x, indexMCP.y - wrist.y);
                 
-                // 2. Calculate Thumb "Closed" Distance (Thumb Tip to Index Knuckle)
-                const triggerDist = Math.hypot(thumbTip.x - indexMCP.x, thumbTip.y - indexMCP.y);
+                // 2. Index Extension Check
+                // We shouldn't shoot if the index finger is curled (not aiming).
+                // Distance from Wrist to IndexTip should be > Distance from Wrist to IndexMCP * 1.2
+                const indexLen = Math.hypot(indexTip.x - wrist.x, indexTip.y - wrist.y);
+                const isIndexExtended = indexLen > (handSize * 1.1);
 
-                const now = Date.now();
-                
-                // Check against dynamic threshold
-                if (triggerDist < (handSize * CONFIG.TRIGGER_SENSITIVITY)) {
-                    if (!state.isTriggerDown && (now - state.lastTriggerTime > CONFIG.TRIGGER_DEBOUNCE)) {
-                        fireShot();
-                        state.lastTriggerTime = now;
-                    }
-                    state.isTriggerDown = true;
-                } else {
+                if (!isIndexExtended) {
+                    // Force release if not pointing
                     state.isTriggerDown = false;
+                    state.triggerSmoothValue = 1.0; // Reset smoothed value to 'open'
+                } else {
+                    // 3. Trigger Metric: Thumb Tip to Index MCP (Hammer action)
+                    const rawTriggerDist = Math.hypot(thumbTip.x - indexMCP.x, thumbTip.y - indexMCP.y);
+                    const normalizedDist = rawTriggerDist / handSize;
+
+                    // 4. Input Smoothing
+                    // Low pass filter to remove jitter from landmarks
+                    state.triggerSmoothValue = THREE.MathUtils.lerp(state.triggerSmoothValue, normalizedDist, CONFIG.TRIGGER_SMOOTHING);
+
+                    const now = Date.now();
+                    
+                    // 5. Hysteresis Loop
+                    if (state.isTriggerDown) {
+                        // Release Logic: Must open hand significantly
+                        if (state.triggerSmoothValue > CONFIG.TRIGGER_RELEASE_THRESH) {
+                            state.isTriggerDown = false;
+                        }
+                    } else {
+                        // Engage Logic: Must close hand significantly
+                        if (state.triggerSmoothValue < CONFIG.TRIGGER_PRESS_THRESH) {
+                             if (now - state.lastTriggerTime > CONFIG.TRIGGER_DEBOUNCE) {
+                                fireShot();
+                                state.lastTriggerTime = now;
+                            }
+                            state.isTriggerDown = true;
+                        }
+                    }
                 }
             } else {
                 state.targetHand = null;
@@ -791,25 +827,36 @@
             muzzleFlashMesh.position.z += 0.5;
             muzzleFlashMesh.scale.set(0.8, 0.8, 0.8);
 
-            // Raycast
-            const aimPos = reticleMesh.position.clone();
-            const reticleScreen = aimPos.clone().project(camera);
-            
+            // Raycast logic
             let hit = false;
-            for (const disc of state.discs) {
-                if (!disc.active) continue;
-                const discScreen = disc.mesh.position.clone().project(camera);
-                const dist = new THREE.Vector2(reticleScreen.x, reticleScreen.y)
-                    .distanceTo(new THREE.Vector2(discScreen.x, discScreen.y));
+            
+            // 1. Guaranteed Hit if Locked (Strong Lock)
+            if (state.lockedTarget && state.lockedTarget.active) {
+                state.lockedTarget.hit();
+                hit = true;
+                const pts = state.lockedTarget.isBonus ? "+500" : "+100";
+                const col = state.lockedTarget.isBonus ? "#ffcc00" : "#00aaff";
+                showFeedback(state.hand.x * window.innerWidth, state.hand.y * window.innerHeight, pts, col);
+            } 
+            // 2. Fallback to Manual Aim (Distance Check)
+            else {
+                const aimPos = reticleMesh.position.clone();
+                const reticleScreen = aimPos.clone().project(camera);
 
-                // Bonus items might be smaller/harder to hit? No, keep same hitbox for fun
-                if (dist < 0.15) {
-                    disc.hit();
-                    hit = true;
-                    const pts = disc.isBonus ? "+500" : "+100";
-                    const col = disc.isBonus ? "#ffcc00" : "#00aaff";
-                    showFeedback(state.hand.x * window.innerWidth, state.hand.y * window.innerHeight, pts, col);
-                    break; 
+                for (const disc of state.discs) {
+                    if (!disc.active) continue;
+                    const discScreen = disc.mesh.position.clone().project(camera);
+                    const dist = new THREE.Vector2(reticleScreen.x, reticleScreen.y)
+                        .distanceTo(new THREE.Vector2(discScreen.x, discScreen.y));
+
+                    if (dist < CONFIG.HIT_RADIUS) { // Improved Hit Tolerance
+                        disc.hit();
+                        hit = true;
+                        const pts = disc.isBonus ? "+500" : "+100";
+                        const col = disc.isBonus ? "#ffcc00" : "#00aaff";
+                        showFeedback(state.hand.x * window.innerWidth, state.hand.y * window.innerHeight, pts, col);
+                        break; 
+                    }
                 }
             }
 
@@ -876,7 +923,7 @@
                 aimRay.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
                 const worldPos = camera.position.clone().add(aimRay.ray.direction.multiplyScalar(5)); 
 
-                // Magnetism
+                // Magnetism & Lock Logic
                 let finalPos = worldPos.clone();
                 let closestDist = Infinity;
                 let targetDisc = null;
@@ -890,23 +937,64 @@
                     }
                 });
 
-                if (targetDisc && closestDist < 2.5) {
-                    const strength = Math.max(0, (2.5 - closestDist) / 2.5);
-                    finalPos.lerp(targetDisc.mesh.position, strength * 0.3);
-                    reticleMesh.material.color.setHex(0xff0055); 
+                state.lockedTarget = null; // Reset lock frame-by-frame
+
+                if (targetDisc && closestDist < CONFIG.MAGNETISM_RADIUS) {
+                    // Normalize distance (0 = center, 1 = edge) - Inverted for proximity
+                    const proximity = 1 - (closestDist / CONFIG.MAGNETISM_RADIUS);
+                    
+                    // Quadratic curve for intuitive feel: weak at edge, strong stickiness at center
+                    const magneticFactor = proximity * proximity; 
+
+                    // Gradual Strength: Increases as you get closer
+                    const dynamicStrength = 0.05 + (magneticFactor * CONFIG.MAGNETISM_STRENGTH); 
+
+                    // Apply magnetic pull
+                    finalPos.lerp(targetDisc.mesh.position, dynamicStrength);
+                    
+                    // Dynamic Color based on Target Type
+                    const baseColor = new THREE.Color(CONFIG.RETICLE_COLOR);
+                    // Gold for Bonus, Red for Regular
+                    const targetColor = targetDisc.isBonus ? new THREE.Color(0xffaa00) : new THREE.Color(0xff0055); 
+                    
+                    // Pulse Effect
+                    const time = Date.now() * 0.008;
+                    const pulseFreq = 1 + (proximity * 5); // Faster when closer
+                    const pulseVal = Math.sin(time * pulseFreq);
+                    
+                    // Mix color: Base -> TargetColor -> WhiteFlash (if very close)
+                    const finalColor = baseColor.clone().lerp(targetColor, proximity);
+                    if (proximity > 0.8) {
+                        // Subtle white flash at high lock
+                        finalColor.lerp(new THREE.Color(0xffffff), Math.max(0, pulseVal * 0.3));
+                    }
+                    reticleMesh.material.color.copy(finalColor);
+                    
+                    // Visual feedback: Scale & Rotation with Pulse
+                    const baseScale = state.isTriggerDown ? 0.6 : 1.2;
+                    const proximityScale = baseScale + (magneticFactor * 0.5); // Grow as getting closer
+                    const pulseScale = 1 + (pulseVal * 0.1 * proximity); // Pulse stronger when closer
+                    
+                    reticleMesh.scale.setScalar(proximityScale * pulseScale);
+                    reticleMesh.rotation.z += (0.1 + (proximity * 0.2)); // Spin faster when closer
+
+                    // 'Hard Lock' for guaranteed hit mechanism
+                    // Only guarantee hit if we are reasonably close (visually connected)
+                    if (proximity > 0.2) {
+                        state.lockedTarget = targetDisc;
+                    }
+
                 } else {
+                    // Normal state
                     reticleMesh.material.color.setHex(CONFIG.RETICLE_COLOR);
+                    const baseScale = state.isTriggerDown ? 0.6 : 1.0;
+                    reticleMesh.scale.setScalar(baseScale);
+                    reticleMesh.rotation.z = 0;
                 }
 
+                // Smooth out the reticle movement itself
                 reticleMesh.position.lerp(finalPos, 0.4);
                 
-                // Visual feedback for trigger press
-                if (state.isTriggerDown) {
-                    reticleMesh.scale.setScalar(0.6); // Shrink when triggered
-                } else {
-                    reticleMesh.scale.setScalar(1.0);
-                }
-
                 reticleMesh.visible = true;
                 reticleMesh.lookAt(camera.position);
 
