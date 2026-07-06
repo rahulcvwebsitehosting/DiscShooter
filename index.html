@@ -45,74 +45,59 @@
         @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px,-30px) scale(1.1); } }
 
         /* HUD */
-        #hud {
-            position: fixed; inset: 0; z-index: 10; pointer-events: none;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-
+        #hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; font-family: 'Segoe UI', system-ui, sans-serif; }
         .hud-panel {
             background: rgba(0,0,0,0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.06); border-radius: 12px;
-            padding: 12px 16px; position: absolute;
+            border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 10px 14px; position: absolute;
         }
 
-        /* Top-Left: Level + Wave */
-        #hud-level {
-            top: 16px; left: 16px; color: #ffcc00; min-width: 100px;
-        }
-        #hud-level .lbl { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6; }
-        #hud-level .val { font-size: 1.8rem; font-weight: 900; line-height: 1.1; }
-        #hud-level .sub { font-size: 0.75rem; opacity: 0.5; margin-top: 2px; }
+        /* Top-Left: Level + Lives */
+        #hud-level { top: 16px; left: 16px; color: #ffcc00; min-width: 90px; }
+        #hud-level .lbl { font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6; }
+        #hud-level .val { font-size: 1.6rem; font-weight: 900; line-height: 1.1; }
+        #hud-level .sub { font-size: 0.7rem; opacity: 0.5; margin-top: 2px; }
 
         /* Top-Left second: Hands status */
-        #hud-hands {
-            top: 16px; left: 130px; color: #fff; min-width: 120px; padding: 10px 14px;
-        }
-        .hand-indicator { display: flex; align-items: center; gap: 8px; margin: 2px 0; font-size: 0.75rem; }
-        .hand-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .hand-dot.active { box-shadow: 0 0 8px currentColor; }
+        #hud-hands { top: 16px; left: 120px; color: #fff; min-width: 110px; padding: 8px 12px; }
+        .hand-indicator { display: flex; align-items: center; gap: 6px; margin: 1px 0; font-size: 0.7rem; }
+        .hand-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; transition: all 0.3s; }
+        .hand-dot.inactive { opacity: 0.2; filter: grayscale(1); }
+
+        /* Lives indicator */
+        #hud-lives { top: 16px; left: 245px; color: #ff4466; padding: 8px 12px; min-width: 60px; text-align: center; }
+        .lives-hearts { font-size: 1.1rem; letter-spacing: 2px; }
 
         /* Top-Right: Score + Combo */
-        #hud-score {
-            top: 16px; right: 16px; text-align: right; color: #fff; min-width: 150px;
-        }
-        #hud-score .score-lbl { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.5; }
-        #hud-score .score-val { font-size: 2.2rem; font-weight: 900; line-height: 1; font-family: 'Courier New', monospace; text-shadow: 0 0 20px rgba(0,170,255,0.3); transition: transform 0.15s; }
+        #hud-score { top: 16px; right: 16px; text-align: right; color: #fff; min-width: 150px; }
+        #hud-score .score-lbl { font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.5; }
+        #hud-score .score-val { font-size: 2rem; font-weight: 900; line-height: 1; font-family: 'Courier New', monospace; text-shadow: 0 0 20px rgba(0,170,255,0.3); transition: transform 0.15s; }
         #hud-score .score-val.pop { animation: scorePop 0.3s ease-out; }
         @keyframes scorePop { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
-        #hud-score .combo-wrap { margin-top: 4px; min-height: 1.2em; }
-        .combo-text { font-size: 1rem; font-weight: 700; display: inline-block; animation: comboIn 0.3s ease-out; }
+        #hud-score .combo-wrap { margin-top: 3px; min-height: 1.2em; }
+        .combo-text { font-size: 0.85rem; font-weight: 700; display: inline-block; animation: comboIn 0.3s ease-out; }
         @keyframes comboIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .combo-text.x2 { color: #0ff; }
-        .combo-text.x3 { color: #0f0; }
-        .combo-text.x4 { color: #ff0; }
-        .combo-text.x5 { color: #f80; }
-        .combo-text.x6 { color: #f00; }
+        .combo-text.x2 { color: #0ff; } .combo-text.x3 { color: #0f0; } .combo-text.x4 { color: #ff0; } .combo-text.x5 { color: #f80; } .combo-text.x6 { color: #f00; }
 
         /* Bottom stats */
-        #hud-stats {
-            bottom: 70px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 20px; color: rgba(255,255,255,0.6);
-            font-size: 0.7rem; letter-spacing: 1px; padding: 8px 20px;
-        }
+        #hud-stats { bottom: 70px; left: 50%; transform: translateX(-50%); display: flex; gap: 16px; color: rgba(255,255,255,0.6); font-size: 0.65rem; letter-spacing: 1px; padding: 6px 16px; }
         #hud-stats span { white-space: nowrap; }
-        #hud-stats .num { color: #fff; font-weight: 700; font-size: 0.85rem; }
+        #hud-stats .num { color: #fff; font-weight: 700; font-size: 0.8rem; }
 
         /* Instructions */
         #instructions {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-            color: rgba(255,255,255,0.6); font-size: 0.75rem; text-align: center;
+            color: rgba(255,255,255,0.6); font-size: 0.7rem; text-align: center;
             background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
-            padding: 10px 24px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
+            padding: 8px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
             white-space: nowrap; letter-spacing: 0.5px;
         }
-        #instructions .hand-label { display: inline-block; padding: 2px 10px; border-radius: 10px; margin: 0 4px; font-weight: 600; }
-        #instructions .hand-label.h0 { background: rgba(0,255,204,0.2); color: #0fc; }
-        #instructions .hand-label.h1 { background: rgba(255,102,0,0.2); color: #f60; }
+        #instructions .hl { display: inline-block; padding: 1px 8px; border-radius: 8px; margin: 0 2px; font-weight: 600; }
+        #instructions .hl.h0 { background: rgba(0,255,204,0.2); color: #0fc; }
+        #instructions .hl.h1 { background: rgba(255,102,0,0.2); color: #f60; }
 
         /* Floating Text */
         .floating-text {
-            position: absolute; font-weight: 900; font-size: 2rem;
+            position: absolute; font-weight: 900; font-size: 1.8rem;
             text-shadow: 0 0 20px rgba(0,0,0,0.8); pointer-events: none;
             animation: floatUp 0.9s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
             white-space: nowrap;
@@ -120,16 +105,55 @@
         @keyframes floatUp {
             0% { transform: translateY(0) scale(0.3); opacity: 0; }
             25% { opacity: 1; }
-            100% { transform: translateY(-100px) scale(1.2); opacity: 0; }
+            100% { transform: translateY(-90px) scale(1.2); opacity: 0; }
         }
+
+        /* Game Over Screen */
+        #gameover {
+            position: fixed; inset: 0; z-index: 200;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(16px);
+            opacity: 0; pointer-events: none; transition: opacity 0.6s;
+        }
+        #gameover.show { opacity: 1; pointer-events: auto; }
+        #gameover .go-title { font-size: 2.5rem; font-weight: 900; color: #ff4466; text-shadow: 0 0 40px rgba(255,68,102,0.5); margin-bottom: 8px; letter-spacing: 4px; }
+        #gameover .go-subtitle { color: rgba(255,255,255,0.4); font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 28px; }
+
+        .score-card {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px; padding: 24px 36px; margin-bottom: 28px;
+        }
+        .score-card .item { text-align: center; }
+        .score-card .item .label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.4); }
+        .score-card .item .value { font-size: 1.6rem; font-weight: 900; color: #fff; line-height: 1.2; }
+        .score-card .item .value.gold { color: #ffcc00; }
+        .score-card .item .value.cyan { color: #0ff; }
+        .score-card .item .value.pink { color: #ff4466; }
+        .score-card .item .value.green { color: #0f0; }
+
+        #go-restart-btn {
+            padding: 14px 44px; background: transparent; border: 2px solid rgba(0,255,255,0.4);
+            color: #0ff; font-size: 1rem; cursor: pointer; text-transform: uppercase;
+            font-weight: 700; letter-spacing: 3px; border-radius: 4px;
+            transition: all 0.4s; position: relative; overflow: hidden;
+        }
+        #go-restart-btn:hover { background: rgba(0,255,255,0.15); border-color: #0ff; box-shadow: 0 0 40px rgba(0,255,255,0.4); }
+
+        .go-lives-row { display: flex; gap: 6px; justify-content: center; font-size: 1.5rem; margin-bottom: 20px; }
+        .go-lives-row .lost { opacity: 0.15; filter: grayscale(1); }
 
         @media (max-width: 600px) {
             #hud-level .val { font-size: 1.2rem; }
             #hud-score .score-val { font-size: 1.4rem; }
             #hud-hands { display: none; }
+            #hud-lives { left: 16px; top: auto; bottom: 110px; }
             .loader-title { font-size: 1.4rem; }
-            #instructions { font-size: 0.65rem; padding: 8px 16px; white-space: normal; max-width: 90vw; }
-            #hud-stats { gap: 12px; font-size: 0.6rem; padding: 6px 14px; flex-wrap: wrap; justify-content: center; }
+            #instructions { font-size: 0.6rem; padding: 6px 14px; white-space: normal; max-width: 90vw; }
+            #hud-stats { gap: 10px; font-size: 0.55rem; padding: 4px 12px; flex-wrap: wrap; justify-content: center; }
+            .score-card { grid-template-columns: 1fr 1fr; gap: 8px 16px; padding: 16px 20px; }
+            .score-card .item .value { font-size: 1.2rem; }
+            #gameover .go-title { font-size: 1.8rem; }
         }
     </style>
 </head>
@@ -152,25 +176,48 @@
             <div class="val" id="level-display">1</div>
             <div class="sub" id="wave-display">Discs: <span id="disc-count">0</span></div>
         </div>
+
         <div id="hud-hands" class="hud-panel">
-            <div class="hand-indicator"><span class="hand-dot" id="hand0-dot" style="color:#0fc;background:#0fc;"></span> <span id="hand0-label">Hand 1: --</span></div>
-            <div class="hand-indicator"><span class="hand-dot" id="hand1-dot" style="color:#f60;background:#f60;"></span> <span id="hand1-label">Hand 2: --</span></div>
+            <div class="hand-indicator"><span class="hand-dot inactive" id="hand0-dot" style="color:#0fc;background:#0fc;"></span> <span id="hand0-label">Hand 1: --</span></div>
+            <div class="hand-indicator"><span class="hand-dot inactive" id="hand1-dot" style="color:#f60;background:#f60;"></span> <span id="hand1-label">Hand 2: --</span></div>
         </div>
+
+        <div id="hud-lives" class="hud-panel">
+            <div class="lives-hearts" id="lives-display">❤❤❤</div>
+        </div>
+
         <div id="hud-score" class="hud-panel">
             <div class="score-lbl">Score</div>
             <div class="score-val" id="score-display">0</div>
             <div class="combo-wrap" id="combo-display"></div>
         </div>
+
         <div id="hud-stats" class="hud-panel">
-            <span>Accuracy <span class="num" id="accuracy-display">0%</span></span>
-            <span>Hits <span class="num" id="hits-display">0</span></span>
-            <span>Shots <span class="num" id="shots-display">0</span></span>
-            <span>Time <span class="num" id="timer-display">0:00</span></span>
+            <span>ACC <span class="num" id="accuracy-display">0%</span></span>
+            <span>HITS <span class="num" id="hits-display">0</span></span>
+            <span>MISS <span class="num" id="miss-display">0</span></span>
+            <span>TIME <span class="num" id="timer-display">0:00</span></span>
         </div>
+
         <div id="instructions">
-            Point <span class="hand-label h0">Left Hand</span> to aim · Pinch thumb to shoot
-            · <span class="hand-label h1">Right Hand</span> also shoots · Gold = +500
+            Point <span class="hl h0">Left</span> + pinch to shoot &nbsp;·&nbsp; <span class="hl h1">Right</span> also shoots &nbsp;·&nbsp; Gold = +500
         </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover">
+        <div class="go-title">GAME OVER</div>
+        <div class="go-subtitle">Nice shooting, soldier</div>
+        <div class="go-lives-row" id="go-lives"></div>
+        <div class="score-card">
+            <div class="item"><div class="label">Final Score</div><div class="value gold" id="go-score">0</div></div>
+            <div class="item"><div class="label">Level Reached</div><div class="value cyan" id="go-level">1</div></div>
+            <div class="item"><div class="label">Accuracy</div><div class="value green" id="go-accuracy">0%</div></div>
+            <div class="item"><div class="label">Best Combo</div><div class="value pink" id="go-combo">0</div></div>
+            <div class="item"><div class="label">Hits / Shots</div><div class="value" id="go-hits">0 / 0</div></div>
+            <div class="item"><div class="label">Time Played</div><div class="value" id="go-time">0:00</div></div>
+        </div>
+        <button id="go-restart-btn">Play Again</button>
     </div>
 
     <video id="input_video" playsinline muted></video>
@@ -188,18 +235,17 @@
     <script type="module">
         import * as THREE from 'three';
 
-        // ===== CONFIG =====
         const CONFIG = {
             AI_FPS: 45,
             MAX_DISCS: 6,
-            BASE_SPEED: 0.035,
+            BASE_SPEED: 0.025,
             MAGNETISM_RADIUS: 3.0,
             MAGNETISM_STRENGTH: 0.5,
             HIT_RADIUS: 0.22,
-            TRIGGER_PRESS_THRESH: 0.22,
-            TRIGGER_RELEASE_THRESH: 0.38,
-            TRIGGER_SMOOTHING: 0.35,
-            TRIGGER_DEBOUNCE: 180,
+            TRIGGER_PRESS_THRESH: 0.30,
+            TRIGGER_RELEASE_THRESH: 0.45,
+            TRIGGER_SMOOTHING: 0.50,
+            TRIGGER_DEBOUNCE: 250,
             LASER_COLORS: [0x00ffcc, 0xff6600],
             RETICLE_COLORS: [0x00ffcc, 0xff6600],
             FACING_MODE: 'user',
@@ -210,11 +256,11 @@
             CAM_HEIGHT: 240
         };
 
-        // ===== GLOBAL STATE =====
         const state = {
-            isLoading: true, isPlaying: false,
+            isLoading: true, isPlaying: false, gameOver: false,
             score: 0, level: 1, speedMultiplier: 1.0,
             hits: 0, shots: 0, combo: 0, maxCombo: 0,
+            lives: 3, escapedDiscs: 0,
             startTime: 0, prevLevel: 1,
             lastAiTime: 0,
             hands: [
@@ -242,11 +288,22 @@
             accuracy: document.getElementById('accuracy-display'),
             hits: document.getElementById('hits-display'),
             shots: document.getElementById('shots-display'),
+            miss: document.getElementById('miss-display'),
             timer: document.getElementById('timer-display'),
+            lives: document.getElementById('lives-display'),
             hand0dot: document.getElementById('hand0-dot'),
             hand1dot: document.getElementById('hand1-dot'),
             hand0label: document.getElementById('hand0-label'),
-            hand1label: document.getElementById('hand1-label')
+            hand1label: document.getElementById('hand1-label'),
+            gameover: document.getElementById('gameover'),
+            goScore: document.getElementById('go-score'),
+            goLevel: document.getElementById('go-level'),
+            goAccuracy: document.getElementById('go-accuracy'),
+            goCombo: document.getElementById('go-combo'),
+            goHits: document.getElementById('go-hits'),
+            goTime: document.getElementById('go-time'),
+            goLives: document.getElementById('go-lives'),
+            restartBtn: document.getElementById('go-restart-btn')
         };
 
         let camera, scene, renderer, videoTexture;
@@ -255,14 +312,13 @@
         let audioCtx;
         let glowTex, smokeTex, sparkTex, hardSparkTex;
         let bgStars;
+        let handsInstance;
 
-        // ===== POOLING =====
         const particlePool = [];
         const MAX_PARTICLES = 200;
         const shardPool = [];
         const MAX_SHARDS = 60;
 
-        // ===== AUDIO =====
         const AudioSys = {
             init: () => {
                 const AC = window.AudioContext || window.webkitAudioContext;
@@ -287,10 +343,10 @@
             hit: () => { AudioSys.tone(250, 'square', 0.08, 0.08); setTimeout(() => AudioSys.tone(120, 'sawtooth', 0.15, 0.07), 40); },
             bonus: () => { AudioSys.tone(1400, 'sine', 0.08, 0.08); setTimeout(() => AudioSys.tone(2000, 'sine', 0.25, 0.08), 80); },
             levelup: () => { AudioSys.tone(660, 'sine', 0.15, 0.1); setTimeout(() => AudioSys.tone(880, 'sine', 0.2, 0.1), 150); setTimeout(() => AudioSys.tone(1100, 'sine', 0.3, 0.1), 300); },
-            combo: (n) => AudioSys.tone(600 + n * 80, 'sine', 0.12, 0.06)
+            combo: (n) => AudioSys.tone(600 + n * 80, 'sine', 0.12, 0.06),
+            gameover: () => { AudioSys.tone(400, 'sawtooth', 0.2, 0.1); setTimeout(() => AudioSys.tone(300, 'sawtooth', 0.3, 0.08), 200); setTimeout(() => AudioSys.tone(200, 'sawtooth', 0.5, 0.06), 450); }
         };
 
-        // ===== TEXTURES =====
         function makeGrad(stops) {
             const c = document.createElement('canvas');
             c.width = 64; c.height = 64;
@@ -307,30 +363,23 @@
             hardSparkTex = makeGrad([[0,'white'],[0.15,'#ffeeaa'],[1,'transparent']]);
         }
 
-        // ===== THREE.JS =====
         function initThree() {
             initTextures();
             scene = new THREE.Scene();
-
             const aspect = window.innerWidth / window.innerHeight;
             camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 100);
             camera.position.z = 5;
-
             renderer = new THREE.WebGLRenderer({ canvas: els.canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
             renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-            // Lighting
             scene.add(new THREE.AmbientLight(0x404060, 0.8));
             const dl = new THREE.DirectionalLight(0xffffff, 1.5);
-            dl.position.set(2, 8, 8);
-            scene.add(dl);
+            dl.position.set(2, 8, 8); scene.add(dl);
             const pl = new THREE.PointLight(0x00ccff, 0.8, 10);
-            pl.position.set(0, 0, 4);
-            scene.add(pl);
+            pl.position.set(0, 0, 4); scene.add(pl);
 
-            // Background starfield
             const starGeo = new THREE.BufferGeometry();
             const starCount = 200;
             const starPos = new Float32Array(starCount * 3);
@@ -338,10 +387,8 @@
             starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
             const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.04, transparent: true, opacity: 0.6 });
             bgStars = new THREE.Points(starGeo, starMat);
-            bgStars.position.z = -2;
-            scene.add(bgStars);
+            bgStars.position.z = -2; scene.add(bgStars);
 
-            // Video background
             videoTexture = new THREE.VideoTexture(els.video);
             videoTexture.colorSpace = THREE.SRGBColorSpace;
             videoTexture.minFilter = THREE.LinearFilter;
@@ -349,27 +396,20 @@
             videoTexture.repeat.set(-1, 1);
             scene.background = videoTexture;
 
-            // Reticles & Lasers & Flashes (one per hand)
             for (let h = 0; h < 2; h++) {
                 const rMat = new THREE.MeshBasicMaterial({ color: CONFIG.RETICLE_COLORS[h], transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
                 const rMesh = new THREE.Mesh(new THREE.RingGeometry(0.07, 0.09, 32), rMat);
                 rMesh.add(new THREE.Mesh(new THREE.CircleGeometry(0.015, 12), rMat));
-                rMesh.visible = false;
-                scene.add(rMesh);
-                reticleMeshes.push(rMesh);
+                rMesh.visible = false; scene.add(rMesh); reticleMeshes.push(rMesh);
 
                 const lMat = new THREE.LineBasicMaterial({ color: CONFIG.LASER_COLORS[h], transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending });
                 const lGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-10)]);
                 const lLine = new THREE.Line(lGeo, lMat);
-                lLine.visible = false;
-                scene.add(lLine);
-                laserLines.push(lLine);
+                lLine.visible = false; scene.add(lLine); laserLines.push(lLine);
 
                 const fMat = new THREE.SpriteMaterial({ map: sparkTex, color: 0xffaa00, blending: THREE.AdditiveBlending, transparent: true });
                 const flash = new THREE.Sprite(fMat);
-                flash.scale.set(0,0,0);
-                scene.add(flash);
-                muzzleFlashes.push(flash);
+                flash.scale.set(0,0,0); scene.add(flash); muzzleFlashes.push(flash);
             }
 
             window.addEventListener('resize', () => {
@@ -379,7 +419,6 @@
             });
         }
 
-        // ===== PARTICLES (Pooled) =====
         function getParticle(type, pos, color) {
             let p;
             if (particlePool.length > 0) {
@@ -401,9 +440,7 @@
             p.velocity.set((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).normalize().multiplyScalar(speed);
             const s = type === 0 ? 0.3 : type === 2 ? 0.08 : 0.1;
             p.mesh.scale.setScalar(s);
-            p.type = type;
-            p.life = 1;
-            p.active = true;
+            p.type = type; p.life = 1; p.active = true;
             return p;
         }
 
@@ -421,38 +458,22 @@
             s.mesh.position.copy(pos);
             s.velocity.set((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5)).normalize().multiplyScalar(0.08 + Math.random() * 0.1);
             s.rotSpeed.set(Math.random(), Math.random(), Math.random());
-            s.mesh.scale.setScalar(1);
-            s.life = 1;
-            s.active = true;
+            s.mesh.scale.setScalar(1); s.life = 1; s.active = true;
             return s;
         }
 
         function spawnExplosion(pos, isBonus) {
             const color = isBonus ? 0xffdd00 : 0xff8800;
             const sColor = isBonus ? 0xffff00 : 0x00aaff;
-
             const flash = getParticle(0, pos, 0xffffff);
             if (flash) { flash.mesh.scale.setScalar(isBonus ? 1.8 : 1.2); state.particles.push(flash); }
-
             const count = isBonus ? 16 : 10;
-            for (let i = 0; i < count; i++) {
-                const p = getParticle(0, pos, color);
-                if (p) state.particles.push(p);
-            }
-            if (isBonus) {
-                for (let i = 0; i < 8; i++) {
-                    const p = getParticle(2, pos, 0xffffaa);
-                    if (p) state.particles.push(p);
-                }
-            }
+            for (let i = 0; i < count; i++) { const p = getParticle(0, pos, color); if (p) state.particles.push(p); }
+            if (isBonus) { for (let i = 0; i < 8; i++) { const p = getParticle(2, pos, 0xffffaa); if (p) state.particles.push(p); } }
             const sc = isBonus ? 8 : 5;
-            for (let i = 0; i < sc; i++) {
-                const s = getShard(pos, sColor);
-                if (s) state.shards.push(s);
-            }
+            for (let i = 0; i < sc; i++) { const s = getShard(pos, sColor); if (s) state.shards.push(s); }
         }
 
-        // ===== ENTITIES =====
         class Disc {
             constructor() { this.create(); scene.add(this.mesh); }
             create() {
@@ -481,7 +502,6 @@
                 const sc = this.isBonus ? 1.15 : 1.0;
                 this.mesh.scale.setScalar(sc);
                 this.mesh.children[1].material.color.setHex(this.isBonus ? 0xffaa00 : 0x00aaff);
-
                 const side = Math.floor(Math.random() * 4);
                 const spread = 7;
                 let x, y;
@@ -500,6 +520,7 @@
                 this.rotSpeed = 0.08 + Math.random() * 0.1;
                 this.active = true;
                 this.mesh.visible = true;
+                this.escaped = false;
             }
             update() {
                 if (!this.active) return;
@@ -511,7 +532,13 @@
                     const p = getParticle(pt, this.mesh.position.clone(), col);
                     if (p) state.particles.push(p);
                 }
-                if (this.mesh.position.length() > 12) this.reset();
+                if (this.mesh.position.length() > 11) {
+                    if (!this.escaped) {
+                        this.escaped = true;
+                        loseLife();
+                    }
+                    this.reset();
+                }
             }
             hit() {
                 this.active = false; this.mesh.visible = false;
@@ -522,30 +549,37 @@
             }
         }
 
-        // ===== SCORING =====
+        function loseLife() {
+            state.lives--;
+            state.escapedDiscs++;
+            updateLivesUI();
+            if (state.lives <= 0) endGame();
+        }
+
+        function updateLivesUI() {
+            els.lives.innerText = '❤'.repeat(Math.max(0, state.lives)) + '🖤'.repeat(Math.max(0, 3 - state.lives));
+        }
+
         function addScore(points, handIdx) {
             state.score += points;
             state.hits++;
             state.combo++;
-
+            if (state.combo > state.maxCombo) state.maxCombo = state.combo;
             const comboMultiplier = Math.min(1 + Math.floor(state.combo / 5) * 0.5, 5);
             const finalPoints = Math.round(points * comboMultiplier);
             state.score += finalPoints - points;
             state.shots++;
-
             els.score.innerText = state.score.toLocaleString();
             els.hits.innerText = state.hits;
+            els.miss.innerText = state.escapedDiscs;
             els.accuracy.innerText = state.hits > 0 ? Math.round(state.hits / state.shots * 100) + '%' : '0%';
-
             const comboLevel = Math.floor(state.combo / 5);
             if (comboLevel > 0) {
                 const cls = ['x2','x3','x4','x5','x6'][Math.min(comboLevel-1, 4)];
-                const multiText = comboMultiplier > 1 ? ` (x${comboMultiplier})` : '';
-                els.combo.innerHTML = `<span class="combo-text ${cls}">${state.combo} streak${multiText}</span>`;
+                els.combo.innerHTML = `<span class="combo-text ${cls}">${state.combo} streak (x${comboMultiplier})</span>`;
             } else {
                 els.combo.innerHTML = '';
             }
-
             const newLevel = Math.floor(state.score / CONFIG.POINTS_PER_LEVEL) + 1;
             if (newLevel > state.level) {
                 state.level = newLevel;
@@ -561,7 +595,6 @@
                 style.textContent = '@keyframes fadeOut { to { opacity: 0; } }';
                 document.head.appendChild(style);
             }
-
             if (state.combo > 0 && state.combo % 5 === 0) AudioSys.combo(state.combo);
             els.score.classList.remove('pop');
             void els.score.offsetWidth;
@@ -575,7 +608,68 @@
             els.accuracy.innerText = state.hits > 0 ? Math.round(state.hits / state.shots * 100) + '%' : '0%';
         }
 
-        // ===== HAND DETECTION =====
+        function endGame() {
+            state.isPlaying = false;
+            state.gameOver = true;
+            AudioSys.gameover();
+
+            const elapsed = state.startTime ? Math.floor((Date.now() - state.startTime) / 1000) : 0;
+            const m = Math.floor(elapsed / 60);
+            const s = elapsed % 60;
+            const acc = state.hits > 0 ? Math.round(state.hits / state.shots * 100) : 0;
+
+            els.goScore.innerText = state.score.toLocaleString();
+            els.goLevel.innerText = String(state.level);
+            els.goAccuracy.innerText = acc + '%';
+            els.goCombo.innerText = String(state.maxCombo);
+            els.goHits.innerText = state.hits + ' / ' + state.shots;
+            els.goTime.innerText = m + ':' + String(s).padStart(2, '0');
+
+            const gone = 3 - Math.max(0, state.lives);
+            els.goLives.innerHTML = '❤'.repeat(Math.max(0, state.lives)) + '🖤'.repeat(gone);
+
+            els.gameover.classList.add('show');
+        }
+
+        function restartGame() {
+            for (const d of state.discs) {
+                d.active = false;
+                d.mesh.visible = false;
+            }
+            state.discs.length = 0;
+            for (const p of state.particles) { p.active = false; if (particlePool.length < MAX_PARTICLES) particlePool.push(p); }
+            for (const s of state.shards) { s.active = false; if (shardPool.length < MAX_SHARDS) shardPool.push(s); }
+            state.particles.length = 0;
+            state.shards.length = 0;
+            state.score = 0; state.level = 1; state.speedMultiplier = 1.0;
+            state.hits = 0; state.shots = 0; state.combo = 0; state.maxCombo = 0;
+            state.lives = 3; state.escapedDiscs = 0;
+            state.isPlaying = false; state.gameOver = false;
+            state.screenShake = 0;
+            state.startTime = 0;
+            state.aiFps = CONFIG.AI_FPS;
+            for (const h of state.hands) {
+                h.x = null; h.y = null; h.sx = null; h.sy = null;
+                h.isTriggerDown = false; h.triggerSmooth = 1.0; h.lastTrigger = 0;
+                h.lockedTarget = null; h.active = false;
+            }
+            els.score.innerText = '0';
+            els.level.innerText = '1';
+            els.hits.innerText = '0';
+            els.shots.innerText = '0';
+            els.miss.innerText = '0';
+            els.accuracy.innerText = '0%';
+            els.timer.innerText = '0:00';
+            els.combo.innerHTML = '';
+            updateLivesUI();
+            els.gameover.classList.remove('show');
+
+            for (let i = 0; i < CONFIG.MAX_DISCS; i++) state.discs.push(new Disc());
+            state.isPlaying = true;
+            state.startTime = Date.now();
+            requestAnimationFrame(renderLoop);
+        }
+
         async function initMediaPipe() {
             try {
                 els.status.innerHTML = 'Loading Hand Model<span id="status-dots"><span>.</span><span>.</span><span>.</span></span>';
@@ -587,6 +681,7 @@
                     minTrackingConfidence: 0.5
                 });
                 hands.onResults(onHandsResults);
+                handsInstance = hands;
 
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: {
@@ -661,15 +756,16 @@
                     handData.active = true;
 
                     const handSize = Math.hypot(idxMcp.x - wrist.x, idxMcp.y - wrist.y);
+                    if (handSize < 0.01) continue;
+
                     const idxLen = Math.hypot(idxTip.x - wrist.x, idxTip.y - wrist.y);
-                    const isExtended = idxLen > (handSize * 1.0);
+                    const isExtended = idxLen > (handSize * 0.85);
 
                     if (!isExtended) {
                         handData.isTriggerDown = false;
-                        handData.triggerSmooth = 1.0;
                     } else {
                         const rawDist = Math.hypot(thumbTip.x - idxMcp.x, thumbTip.y - idxMcp.y);
-                        const norm = rawDist / Math.max(handSize, 0.01);
+                        const norm = rawDist / handSize;
                         handData.triggerSmooth = THREE.MathUtils.lerp(handData.triggerSmooth, norm, CONFIG.TRIGGER_SMOOTHING);
 
                         const now = Date.now();
@@ -693,13 +789,12 @@
                 state.hands[h].active = false;
                 state.hands[h].isTriggerDown = false;
             }
-            document.getElementById('hand' + 0 + '-dot').classList.toggle('active', state.hands[0].active);
-            document.getElementById('hand' + 1 + '-dot').classList.toggle('active', state.hands[1].active);
+            els.hand0dot.classList.toggle('inactive', !state.hands[0].active);
+            els.hand1dot.classList.toggle('inactive', !state.hands[1].active);
             els.hand0label.textContent = state.hands[0].active ? 'Hand 1: Active' : 'Hand 1: --';
             els.hand1label.textContent = state.hands[1].active ? 'Hand 2: Active' : 'Hand 2: --';
         }
 
-        // ===== FIRING =====
         function fireShot(handIdx) {
             const handData = state.hands[handIdx];
             if (!handData || !handData.active) return;
@@ -739,7 +834,6 @@
                     return;
                 }
             }
-
             AudioSys.shoot();
             addMiss();
         }
@@ -759,7 +853,6 @@
             setTimeout(() => el.remove(), 900);
         }
 
-        // ===== MAIN LOOP =====
         function renderLoop() {
             requestAnimationFrame(renderLoop);
 
@@ -776,7 +869,7 @@
                 }
             }
 
-            if (state.startTime) {
+            if (state.startTime && !state.gameOver) {
                 const elapsed = Math.floor((now - state.startTime) / 1000);
                 const m = Math.floor(elapsed / 60);
                 const s = elapsed % 60;
@@ -800,22 +893,11 @@
             state.particles = state.particles.filter(p => {
                 if (!p.active) return false;
                 p.mesh.position.add(p.velocity);
-                if (p.type === 0) {
-                    p.life -= 0.06;
-                    p.mesh.scale.multiplyScalar(0.88);
-                } else if (p.type === 2) {
-                    p.life -= 0.03;
-                    p.velocity.y -= 0.002;
-                } else {
-                    p.life -= 0.02;
-                    p.mesh.scale.multiplyScalar(1.04);
-                }
+                if (p.type === 0) { p.life -= 0.06; p.mesh.scale.multiplyScalar(0.88); }
+                else if (p.type === 2) { p.life -= 0.03; p.velocity.y -= 0.002; }
+                else { p.life -= 0.02; p.mesh.scale.multiplyScalar(1.04); }
                 p.mesh.material.opacity = Math.max(0, p.life);
-                if (p.life <= 0) {
-                    p.active = false;
-                    if (particlePool.length < MAX_PARTICLES) particlePool.push(p);
-                    return false;
-                }
+                if (p.life <= 0) { p.active = false; if (particlePool.length < MAX_PARTICLES) particlePool.push(p); return false; }
                 return true;
             });
 
@@ -827,11 +909,7 @@
                 s.velocity.y -= 0.004;
                 s.life -= 0.025;
                 s.mesh.scale.setScalar(Math.max(0, s.life));
-                if (s.life <= 0) {
-                    s.active = false;
-                    if (shardPool.length < MAX_SHARDS) shardPool.push(s);
-                    return false;
-                }
+                if (s.life <= 0) { s.active = false; if (shardPool.length < MAX_SHARDS) shardPool.push(s); return false; }
                 return true;
             });
 
@@ -882,17 +960,17 @@
 
                         const baseColor = new THREE.Color(CONFIG.RETICLE_COLORS[h]);
                         const targetColor = targetDisc.isBonus ? new THREE.Color(0xffaa00) : new THREE.Color(0xff0055);
-                        const time = now * 0.008;
+                        const t = now * 0.008;
                         const pulseFreq = 1 + (proximity * 5);
-                        const pulseVal = Math.sin(time * pulseFreq);
-                        const finalColor = baseColor.clone().lerp(targetColor, proximity);
-                        if (proximity > 0.8) finalColor.lerp(new THREE.Color(0xffffff), Math.max(0, pulseVal * 0.3));
-                        reticle.material.color.copy(finalColor);
+                        const pv = Math.sin(t * pulseFreq);
+                        const fc = baseColor.clone().lerp(targetColor, proximity);
+                        if (proximity > 0.8) fc.lerp(new THREE.Color(0xffffff), Math.max(0, pv * 0.3));
+                        reticle.material.color.copy(fc);
 
-                        const baseScale = hd.isTriggerDown ? 0.5 : 1.1;
-                        const proximityScale = baseScale + (magneticFactor * 0.4);
-                        const pulseScale = 1 + (pulseVal * 0.08 * proximity);
-                        reticle.scale.setScalar(proximityScale * pulseScale);
+                        const bs = hd.isTriggerDown ? 0.5 : 1.1;
+                        const ps = bs + (magneticFactor * 0.4);
+                        const psc = 1 + (pv * 0.08 * proximity);
+                        reticle.scale.setScalar(ps * psc);
                         reticle.rotation.z += (0.08 + (proximity * 0.15));
 
                         if (proximity > 0.15) hd.lockedTarget = targetDisc;
@@ -922,7 +1000,8 @@
             renderer.render(scene, camera);
         }
 
-        // ===== BOOT =====
+        els.restartBtn.onclick = restartGame;
+
         initThree();
         initMediaPipe();
     </script>

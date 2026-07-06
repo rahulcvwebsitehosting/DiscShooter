@@ -23,8 +23,11 @@
 - **🎮 Progressive Difficulty** — Enemies get faster as you level up (15% per level).
 - **🔥 Combo System** — Chain hits for score multipliers up to 5×.
 - **💎 Bonus Targets** — Gold orbs worth 500 points (regular discs are 100).
+- **❤️ Lives System** — 3 lives. Miss a disc? Lose a life. Game ends when lives hit zero.
+- **📊 End Game Score Card** — Full stats: final score, level, accuracy, best combo, hits/shots, time played.
 - **🎨 Immersive VFX** — Particle explosions, shard debris, screen shake, muzzle flash, and dynamic reticle feedback.
 - **🔊 Procedural Audio** — Synthesized sound effects via Web Audio API (no audio files needed).
+- **⚡ Optimized for Low-End Devices** — Lite hand model (modelComplexity: 0), 320×240 camera, adaptive AI throttling, object pooling, capped pixel ratio.
 - **📱 Responsive** — Works on desktop and mobile browsers.
 - **📡 Offline-Ready** — Service Worker caches assets for low-network environments.
 
@@ -90,10 +93,17 @@ npm run preview
 | 👍 Pinch thumb to index | Shoot |
 | 👐 Use both hands | Dual-wield — each hand aims & fires independently |
 
+**Game Rules:**
+- You have **3 lives** (shown as hearts). Each disc that escapes off-screen costs 1 life.
+- Reach **0 lives** = Game Over. View your score card with full stats.
+- Click **Play Again** on the score card to restart.
+- Chain **5 consecutive hits** for a score multiplier. Keep the streak alive!
+
 **Tips:**
 - Keep your hand within the camera frame for best tracking.
 - A well-lit background improves detection accuracy.
 - Gold orbs move faster but are worth 500 points.
+- Wait for the reticle to glow before pulling the trigger — it means you're locked on.
 
 ---
 
