@@ -76,6 +76,8 @@ npm run dev
 
 The app will be available at `http://localhost:3000`.
 
+> **No server needed** — You can also open `index.html` directly in a modern browser. The app uses an [Import Map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) to load Three.js from CDN when Vite isn't running.
+
 ### Production Build
 
 ```bash

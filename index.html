@@ -227,6 +227,15 @@
     <script src="https://unpkg.com/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }</script>
 
+    <!-- Importmap: works with both Vite (local resolution) and direct file open (CDN fallback) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.170.0/build/three.module.js"
+        }
+    }
+    </script>
+
     <script type="module">
         import * as THREE from 'three';
 
@@ -400,7 +409,7 @@
 
                 const lMat = new THREE.LineBasicMaterial({ color: CONFIG.LASER_COLORS[h], transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
                 const lGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-10)]);
-                const lLine = new THREE.Line(lMat, lGeo);
+                const lLine = new THREE.Line(lGeo, lMat);
                 lLine.visible = false; scene.add(lLine); laserLines.push(lLine);
 
                 const fMat = new THREE.SpriteMaterial({ map: sparkTex, color: 0xffaa00, blending: THREE.AdditiveBlending, transparent: true });
@@ -655,25 +664,31 @@
         }
 
         async function initMediaPipe() {
+            console.log('[Gesture] initMediaPipe starting...');
             try {
                 els.status.innerHTML = 'Loading Hand Model<span id="status-dots"><span>.</span><span>.</span><span>.</span></span>';
                 const hands = new Hands({ locateFile: (f) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${f}` });
                 hands.setOptions({
                     maxNumHands: 2,
                     modelComplexity: 0,
-                    minDetectionConfidence: 0.4,
-                    minTrackingConfidence: 0.4
+                    minDetectionConfidence: 0.3,
+                    minTrackingConfidence: 0.3
                 });
                 hands.onResults(onHandsResults);
                 handsInstance = hands;
 
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: { ideal: CONFIG.CAM_WIDTH },
-                        height: { ideal: CONFIG.CAM_HEIGHT },
-                        facingMode: CONFIG.FACING_MODE
-                    }
-                });
+                els.status.innerHTML = 'Requesting Camera Access<span id="status-dots"><span>.</span><span>.</span><span>.</span></span>';
+                const camTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Camera access timed out. Please allow camera permission and reload.')), 15000));
+                const stream = await Promise.race([
+                    navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: CONFIG.CAM_WIDTH },
+                            height: { ideal: CONFIG.CAM_HEIGHT },
+                            facingMode: CONFIG.FACING_MODE
+                        }
+                    }),
+                    camTimeout
+                ]);
                 els.video.srcObject = stream;
                 els.video.width = CONFIG.CAM_WIDTH;
                 els.video.height = CONFIG.CAM_HEIGHT;
@@ -968,8 +983,14 @@
         els.restartBtn.onclick = restartGame;
         els.endBtn.onclick = endGame;
 
-        initThree();
-        initMediaPipe();
+        console.log('[Gesture] Module loaded, booting...');
+        try {
+            initThree();
+            initMediaPipe();
+        } catch (e) {
+            console.error('[Gesture] Boot error:', e);
+            els.status.innerText = 'Error: ' + (e.message || e);
+        }
     </script>
 </body>
 </html>
