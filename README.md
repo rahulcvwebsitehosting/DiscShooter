@@ -23,8 +23,8 @@
 - **🎮 Progressive Difficulty** — Enemies get faster as you level up (15% per level).
 - **🔥 Combo System** — Chain hits for score multipliers up to 5×.
 - **💎 Bonus Targets** — Gold orbs worth 500 points (regular discs are 100).
-- **❤️ Lives System** — 3 lives. Miss a disc? Lose a life. Game ends when lives hit zero.
-- **📊 End Game Score Card** — Full stats: final score, level, accuracy, best combo, hits/shots, time played.
+- **❤️ Lives System** — 3 lives. Miss a disc? Lose a life. Click **End Game** anytime to see your score card.
+- **📊 End Game Score Card** — Full stats: final score, level, accuracy, best combo, hits/shots, time played. Play Again restarts fresh.
 - **🎨 Immersive VFX** — Particle explosions, shard debris, screen shake, muzzle flash, and dynamic reticle feedback.
 - **🔊 Procedural Audio** — Synthesized sound effects via Web Audio API (no audio files needed).
 - **⚡ Optimized for Low-End Devices** — Lite hand model (modelComplexity: 0), 320×240 camera, adaptive AI throttling, object pooling, capped pixel ratio.
@@ -94,9 +94,8 @@ npm run preview
 | 👐 Use both hands | Dual-wield — each hand aims & fires independently |
 
 **Game Rules:**
-- You have **3 lives** (shown as hearts). Each disc that escapes off-screen costs 1 life.
-- Reach **0 lives** = Game Over. View your score card with full stats.
-- Click **Play Again** on the score card to restart.
+- **Endless mode** — Play as long as you want. Click **End Game** (top-right) to finish and see your score card.
+- You have **3 lives** (shown as hearts). Each disc that escapes off-screen costs 1 life. At 0 lives, the hearts turn black but you keep playing.
 - Chain **5 consecutive hits** for a score multiplier. Keep the streak alive!
 
 **Tips:**

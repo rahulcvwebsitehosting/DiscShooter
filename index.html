@@ -12,7 +12,6 @@
         #output_canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; }
         #input_video { display: none; }
 
-        /* Loading Screen */
         #loader {
             position: fixed; inset: 0; z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -44,31 +43,26 @@
         .loader-bg-orb:nth-child(2) { width: 250px; height: 250px; background: #f0f; bottom: 10%; right: 10%; animation-delay: -3s; }
         @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px,-30px) scale(1.1); } }
 
-        /* HUD */
         #hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; font-family: 'Segoe UI', system-ui, sans-serif; }
         .hud-panel {
             background: rgba(0,0,0,0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 10px 14px; position: absolute;
         }
 
-        /* Top-Left: Level + Lives */
-        #hud-level { top: 16px; left: 16px; color: #ffcc00; min-width: 90px; }
+        #hud-level { top: 16px; left: 16px; color: #ffcc00; min-width: 80px; }
         #hud-level .lbl { font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6; }
         #hud-level .val { font-size: 1.6rem; font-weight: 900; line-height: 1.1; }
         #hud-level .sub { font-size: 0.7rem; opacity: 0.5; margin-top: 2px; }
 
-        /* Top-Left second: Hands status */
-        #hud-hands { top: 16px; left: 120px; color: #fff; min-width: 110px; padding: 8px 12px; }
+        #hud-hands { top: 16px; left: 115px; color: #fff; min-width: 100px; padding: 8px 12px; }
         .hand-indicator { display: flex; align-items: center; gap: 6px; margin: 1px 0; font-size: 0.7rem; }
         .hand-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; transition: all 0.3s; }
         .hand-dot.inactive { opacity: 0.2; filter: grayscale(1); }
 
-        /* Lives indicator */
-        #hud-lives { top: 16px; left: 245px; color: #ff4466; padding: 8px 12px; min-width: 60px; text-align: center; }
+        #hud-lives { top: 16px; left: 230px; color: #ff4466; padding: 8px 12px; min-width: 50px; text-align: center; }
         .lives-hearts { font-size: 1.1rem; letter-spacing: 2px; }
 
-        /* Top-Right: Score + Combo */
-        #hud-score { top: 16px; right: 16px; text-align: right; color: #fff; min-width: 150px; }
+        #hud-score { top: 16px; right: 16px; text-align: right; color: #fff; min-width: 140px; }
         #hud-score .score-lbl { font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.5; }
         #hud-score .score-val { font-size: 2rem; font-weight: 900; line-height: 1; font-family: 'Courier New', monospace; text-shadow: 0 0 20px rgba(0,170,255,0.3); transition: transform 0.15s; }
         #hud-score .score-val.pop { animation: scorePop 0.3s ease-out; }
@@ -78,12 +72,19 @@
         @keyframes comboIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .combo-text.x2 { color: #0ff; } .combo-text.x3 { color: #0f0; } .combo-text.x4 { color: #ff0; } .combo-text.x5 { color: #f80; } .combo-text.x6 { color: #f00; }
 
-        /* Bottom stats */
-        #hud-stats { bottom: 70px; left: 50%; transform: translateX(-50%); display: flex; gap: 16px; color: rgba(255,255,255,0.6); font-size: 0.65rem; letter-spacing: 1px; padding: 6px 16px; }
+        #hud-stats { bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 16px; color: rgba(255,255,255,0.6); font-size: 0.65rem; letter-spacing: 1px; padding: 6px 16px; }
         #hud-stats span { white-space: nowrap; }
         #hud-stats .num { color: #fff; font-weight: 700; font-size: 0.8rem; }
 
-        /* Instructions */
+        #end-btn {
+            position: absolute; bottom: 60px; right: 16px; z-index: 15;
+            pointer-events: auto; cursor: pointer;
+            padding: 6px 16px; background: rgba(255,68,102,0.15); border: 1px solid rgba(255,68,102,0.3);
+            color: #ff4466; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px;
+            border-radius: 6px; font-weight: 700; transition: all 0.3s;
+        }
+        #end-btn:hover { background: rgba(255,68,102,0.25); border-color: #ff4466; box-shadow: 0 0 15px rgba(255,68,102,0.3); }
+
         #instructions {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
             color: rgba(255,255,255,0.6); font-size: 0.7rem; text-align: center;
@@ -95,7 +96,6 @@
         #instructions .hl.h0 { background: rgba(0,255,204,0.2); color: #0fc; }
         #instructions .hl.h1 { background: rgba(255,102,0,0.2); color: #f60; }
 
-        /* Floating Text */
         .floating-text {
             position: absolute; font-weight: 900; font-size: 1.8rem;
             text-shadow: 0 0 20px rgba(0,0,0,0.8); pointer-events: none;
@@ -108,7 +108,6 @@
             100% { transform: translateY(-90px) scale(1.2); opacity: 0; }
         }
 
-        /* Game Over Screen */
         #gameover {
             position: fixed; inset: 0; z-index: 200;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -147,7 +146,8 @@
             #hud-level .val { font-size: 1.2rem; }
             #hud-score .score-val { font-size: 1.4rem; }
             #hud-hands { display: none; }
-            #hud-lives { left: 16px; top: auto; bottom: 110px; }
+            #hud-lives { left: 16px; top: auto; bottom: 100px; }
+            #end-btn { bottom: 100px; right: 16px; }
             .loader-title { font-size: 1.4rem; }
             #instructions { font-size: 0.6rem; padding: 6px 14px; white-space: normal; max-width: 90vw; }
             #hud-stats { gap: 10px; font-size: 0.55rem; padding: 4px 12px; flex-wrap: wrap; justify-content: center; }
@@ -159,7 +159,6 @@
 </head>
 <body>
 
-    <!-- Loader -->
     <div id="loader">
         <div class="loader-bg-orb"></div>
         <div class="loader-bg-orb"></div>
@@ -169,12 +168,11 @@
         <button id="start-btn">Start Game</button>
     </div>
 
-    <!-- HUD -->
     <div id="hud">
         <div id="hud-level" class="hud-panel">
             <div class="lbl">Level</div>
             <div class="val" id="level-display">1</div>
-            <div class="sub" id="wave-display">Discs: <span id="disc-count">0</span></div>
+            <div class="sub">Discs: <span id="disc-count">0</span></div>
         </div>
 
         <div id="hud-hands" class="hud-panel">
@@ -199,12 +197,13 @@
             <span>TIME <span class="num" id="timer-display">0:00</span></span>
         </div>
 
+        <button id="end-btn">End Game</button>
+
         <div id="instructions">
-            Point <span class="hl h0">Left</span> + pinch to shoot &nbsp;·&nbsp; <span class="hl h1">Right</span> also shoots &nbsp;·&nbsp; Gold = +500
+            Point + pinch to shoot &nbsp;·&nbsp; <span class="hl h0">Left</span> &amp; <span class="hl h1">Right</span> &nbsp;·&nbsp; Gold = +500
         </div>
     </div>
 
-    <!-- Game Over Screen -->
     <div id="gameover">
         <div class="go-title">GAME OVER</div>
         <div class="go-subtitle">Nice shooting, soldier</div>
@@ -223,15 +222,11 @@
     <video id="input_video" playsinline muted></video>
     <canvas id="output_canvas"></canvas>
 
-    <!-- MediaPipe CDN -->
     <script src="https://unpkg.com/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/@mediapipe/drawing_utils@0.3.1640029074/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
-
-    <!-- Service Worker -->
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }</script>
 
-    <!-- Main App -->
     <script type="module">
         import * as THREE from 'three';
 
@@ -240,12 +235,12 @@
             MAX_DISCS: 6,
             BASE_SPEED: 0.025,
             MAGNETISM_RADIUS: 3.0,
-            MAGNETISM_STRENGTH: 0.5,
-            HIT_RADIUS: 0.22,
-            TRIGGER_PRESS_THRESH: 0.30,
-            TRIGGER_RELEASE_THRESH: 0.45,
-            TRIGGER_SMOOTHING: 0.50,
-            TRIGGER_DEBOUNCE: 250,
+            MAGNETISM_STRENGTH: 0.4,
+            HIT_RADIUS: 0.25,
+            TRIGGER_PRESS_THRESH: 0.40,
+            TRIGGER_RELEASE_THRESH: 0.55,
+            TRIGGER_SMOOTHING: 0.55,
+            TRIGGER_DEBOUNCE: 220,
             LASER_COLORS: [0x00ffcc, 0xff6600],
             RETICLE_COLORS: [0x00ffcc, 0xff6600],
             FACING_MODE: 'user',
@@ -261,7 +256,7 @@
             score: 0, level: 1, speedMultiplier: 1.0,
             hits: 0, shots: 0, combo: 0, maxCombo: 0,
             lives: 3, escapedDiscs: 0,
-            startTime: 0, prevLevel: 1,
+            startTime: 0,
             lastAiTime: 0,
             hands: [
                 { x: null, y: null, sx: null, sy: null, isTriggerDown: false, triggerSmooth: 1.0, lastTrigger: 0, lockedTarget: null, active: false },
@@ -270,7 +265,9 @@
             discs: [], shards: [], particles: [],
             screenShake: 0,
             fps: 60, frameCount: 0, fpsTimer: 0,
-            aiFps: CONFIG.AI_FPS
+            aiFps: CONFIG.AI_FPS,
+            renderRafId: null,
+            videoRafId: null
         };
 
         const els = {
@@ -282,12 +279,10 @@
             hud: document.getElementById('hud'),
             score: document.getElementById('score-display'),
             level: document.getElementById('level-display'),
-            wave: document.getElementById('wave-display'),
             discCount: document.getElementById('disc-count'),
             combo: document.getElementById('combo-display'),
             accuracy: document.getElementById('accuracy-display'),
             hits: document.getElementById('hits-display'),
-            shots: document.getElementById('shots-display'),
             miss: document.getElementById('miss-display'),
             timer: document.getElementById('timer-display'),
             lives: document.getElementById('lives-display'),
@@ -303,7 +298,8 @@
             goHits: document.getElementById('go-hits'),
             goTime: document.getElementById('go-time'),
             goLives: document.getElementById('go-lives'),
-            restartBtn: document.getElementById('go-restart-btn')
+            restartBtn: document.getElementById('go-restart-btn'),
+            endBtn: document.getElementById('end-btn')
         };
 
         let camera, scene, renderer, videoTexture;
@@ -402,9 +398,9 @@
                 rMesh.add(new THREE.Mesh(new THREE.CircleGeometry(0.015, 12), rMat));
                 rMesh.visible = false; scene.add(rMesh); reticleMeshes.push(rMesh);
 
-                const lMat = new THREE.LineBasicMaterial({ color: CONFIG.LASER_COLORS[h], transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending });
+                const lMat = new THREE.LineBasicMaterial({ color: CONFIG.LASER_COLORS[h], transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
                 const lGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-10)]);
-                const lLine = new THREE.Line(lGeo, lMat);
+                const lLine = new THREE.Line(lMat, lGeo);
                 lLine.visible = false; scene.add(lLine); laserLines.push(lLine);
 
                 const fMat = new THREE.SpriteMaterial({ map: sparkTex, color: 0xffaa00, blending: THREE.AdditiveBlending, transparent: true });
@@ -467,8 +463,8 @@
             const sColor = isBonus ? 0xffff00 : 0x00aaff;
             const flash = getParticle(0, pos, 0xffffff);
             if (flash) { flash.mesh.scale.setScalar(isBonus ? 1.8 : 1.2); state.particles.push(flash); }
-            const count = isBonus ? 16 : 10;
-            for (let i = 0; i < count; i++) { const p = getParticle(0, pos, color); if (p) state.particles.push(p); }
+            const n = isBonus ? 16 : 10;
+            for (let i = 0; i < n; i++) { const p = getParticle(0, pos, color); if (p) state.particles.push(p); }
             if (isBonus) { for (let i = 0; i < 8; i++) { const p = getParticle(2, pos, 0xffffaa); if (p) state.particles.push(p); } }
             const sc = isBonus ? 8 : 5;
             for (let i = 0; i < sc; i++) { const s = getShard(pos, sColor); if (s) state.shards.push(s); }
@@ -485,11 +481,9 @@
                 this.mesh = new THREE.Mesh(gt, mat);
                 const cg = new THREE.SphereGeometry(this.isBonus ? 0.2 : 0.15, 12, 12);
                 const cm = new THREE.MeshBasicMaterial({ color: this.isBonus ? 0xffffaa : 0x00ffff });
-                this.core = new THREE.Mesh(cg, cm);
-                this.mesh.add(this.core);
+                this.core = new THREE.Mesh(cg, cm); this.mesh.add(this.core);
                 const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: this.isBonus ? 0xffaa00 : 0x00aaff, blending: THREE.AdditiveBlending }));
-                sp.scale.setScalar(1.4);
-                this.mesh.add(sp);
+                sp.scale.setScalar(1.4); this.mesh.add(sp);
                 this.reset();
             }
             reset() {
@@ -499,8 +493,7 @@
                 this.mesh.material.color.setHex(c);
                 this.mesh.material.emissive.setHex(e);
                 this.core.material.color.setHex(this.isBonus ? 0xffffaa : 0x00ffff);
-                const sc = this.isBonus ? 1.15 : 1.0;
-                this.mesh.scale.setScalar(sc);
+                this.mesh.scale.setScalar(this.isBonus ? 1.15 : 1.0);
                 this.mesh.children[1].material.color.setHex(this.isBonus ? 0xffaa00 : 0x00aaff);
                 const side = Math.floor(Math.random() * 4);
                 const spread = 7;
@@ -518,9 +511,7 @@
                 this.velocity = target.sub(this.mesh.position).normalize().multiplyScalar(fs + Math.random()*0.02);
                 this.rotAxis = new THREE.Vector3(Math.random(), Math.random(), 0).normalize();
                 this.rotSpeed = 0.08 + Math.random() * 0.1;
-                this.active = true;
-                this.mesh.visible = true;
-                this.escaped = false;
+                this.active = true; this.mesh.visible = true; this.escaped = false;
             }
             update() {
                 if (!this.active) return;
@@ -553,11 +544,11 @@
             state.lives--;
             state.escapedDiscs++;
             updateLivesUI();
-            if (state.lives <= 0) endGame();
         }
 
         function updateLivesUI() {
-            els.lives.innerText = '❤'.repeat(Math.max(0, state.lives)) + '🖤'.repeat(Math.max(0, 3 - state.lives));
+            const h = Math.max(0, state.lives);
+            els.lives.innerText = '❤'.repeat(h) + '🖤'.repeat(3 - h);
         }
 
         function addScore(points, handIdx) {
@@ -566,8 +557,7 @@
             state.combo++;
             if (state.combo > state.maxCombo) state.maxCombo = state.combo;
             const comboMultiplier = Math.min(1 + Math.floor(state.combo / 5) * 0.5, 5);
-            const finalPoints = Math.round(points * comboMultiplier);
-            state.score += finalPoints - points;
+            state.score += Math.round(points * comboMultiplier) - points;
             state.shots++;
             els.score.innerText = state.score.toLocaleString();
             els.hits.innerText = state.hits;
@@ -577,16 +567,14 @@
             if (comboLevel > 0) {
                 const cls = ['x2','x3','x4','x5','x6'][Math.min(comboLevel-1, 4)];
                 els.combo.innerHTML = `<span class="combo-text ${cls}">${state.combo} streak (x${comboMultiplier})</span>`;
-            } else {
-                els.combo.innerHTML = '';
-            }
+            } else { els.combo.innerHTML = ''; }
             const newLevel = Math.floor(state.score / CONFIG.POINTS_PER_LEVEL) + 1;
             if (newLevel > state.level) {
                 state.level = newLevel;
                 state.speedMultiplier = 1.0 + ((state.level - 1) * 0.15);
                 els.level.innerText = String(state.level);
                 AudioSys.levelup();
-                showFeedback(window.innerWidth/2, window.innerHeight/2, 'LEVEL UP!', '#ffcc00', 0);
+                showFeedback(window.innerWidth/2, window.innerHeight/2, 'LEVEL UP!', '#ffcc00');
                 const flash = document.createElement('div');
                 flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,204,0,0.15);z-index:50;pointer-events:none;animation:fadeOut 0.6s ease-out forwards;';
                 document.body.appendChild(flash);
@@ -627,47 +615,43 @@
 
             const gone = 3 - Math.max(0, state.lives);
             els.goLives.innerHTML = '❤'.repeat(Math.max(0, state.lives)) + '🖤'.repeat(gone);
-
             els.gameover.classList.add('show');
         }
 
         function restartGame() {
-            for (const d of state.discs) {
-                d.active = false;
-                d.mesh.visible = false;
-            }
+            for (const d of state.discs) { d.active = false; d.mesh.visible = false; scene.remove(d.mesh); }
             state.discs.length = 0;
             for (const p of state.particles) { p.active = false; if (particlePool.length < MAX_PARTICLES) particlePool.push(p); }
             for (const s of state.shards) { s.active = false; if (shardPool.length < MAX_SHARDS) shardPool.push(s); }
             state.particles.length = 0;
             state.shards.length = 0;
+
             state.score = 0; state.level = 1; state.speedMultiplier = 1.0;
             state.hits = 0; state.shots = 0; state.combo = 0; state.maxCombo = 0;
             state.lives = 3; state.escapedDiscs = 0;
-            state.isPlaying = false; state.gameOver = false;
             state.screenShake = 0;
-            state.startTime = 0;
             state.aiFps = CONFIG.AI_FPS;
             for (const h of state.hands) {
                 h.x = null; h.y = null; h.sx = null; h.sy = null;
                 h.isTriggerDown = false; h.triggerSmooth = 1.0; h.lastTrigger = 0;
                 h.lockedTarget = null; h.active = false;
             }
-            els.score.innerText = '0';
-            els.level.innerText = '1';
-            els.hits.innerText = '0';
-            els.shots.innerText = '0';
-            els.miss.innerText = '0';
-            els.accuracy.innerText = '0%';
-            els.timer.innerText = '0:00';
-            els.combo.innerHTML = '';
+
+            els.score.innerText = '0'; els.level.innerText = '1';
+            els.hits.innerText = '0'; els.shots.innerText = '0'; els.miss.innerText = '0';
+            els.accuracy.innerText = '0%'; els.timer.innerText = '0:00'; els.combo.innerHTML = '';
             updateLivesUI();
             els.gameover.classList.remove('show');
 
             for (let i = 0; i < CONFIG.MAX_DISCS; i++) state.discs.push(new Disc());
+
             state.isPlaying = true;
+            state.gameOver = false;
             state.startTime = Date.now();
-            requestAnimationFrame(renderLoop);
+
+            if (state.renderRafId) { cancelAnimationFrame(state.renderRafId); state.renderRafId = null; }
+            state.renderRafId = requestAnimationFrame(renderLoop);
+            if (handsInstance) startVideoProcessing(handsInstance);
         }
 
         async function initMediaPipe() {
@@ -677,8 +661,8 @@
                 hands.setOptions({
                     maxNumHands: 2,
                     modelComplexity: 0,
-                    minDetectionConfidence: 0.5,
-                    minTrackingConfidence: 0.5
+                    minDetectionConfidence: 0.4,
+                    minTrackingConfidence: 0.4
                 });
                 hands.onResults(onHandsResults);
                 handsInstance = hands;
@@ -707,7 +691,7 @@
                     for (let i = 0; i < CONFIG.MAX_DISCS; i++) state.discs.push(new Disc());
                     state.isPlaying = true;
                     state.startTime = Date.now();
-                    requestAnimationFrame(renderLoop);
+                    state.renderRafId = requestAnimationFrame(renderLoop);
                     startVideoProcessing(hands);
                 };
             } catch (e) {
@@ -719,7 +703,10 @@
         function startVideoProcessing(hands) {
             const video = els.video;
             async function processFrame() {
-                if (!state.isPlaying) return;
+                if (!state.isPlaying) {
+                    state.videoRafId = null;
+                    return;
+                }
                 const now = Date.now();
                 if (now - state.lastAiTime >= (1000 / state.aiFps)) {
                     state.lastAiTime = now;
@@ -728,13 +715,13 @@
                 if ('requestVideoFrameCallback' in video) {
                     video.requestVideoFrameCallback(processFrame);
                 } else {
-                    requestAnimationFrame(processFrame);
+                    state.videoRafId = requestAnimationFrame(processFrame);
                 }
             }
             if ('requestVideoFrameCallback' in video) {
                 video.requestVideoFrameCallback(processFrame);
             } else {
-                requestAnimationFrame(processFrame);
+                state.videoRafId = requestAnimationFrame(processFrame);
             }
         }
 
@@ -756,31 +743,25 @@
                     handData.active = true;
 
                     const handSize = Math.hypot(idxMcp.x - wrist.x, idxMcp.y - wrist.y);
-                    if (handSize < 0.01) continue;
+                    if (handSize < 0.005) continue;
 
-                    const idxLen = Math.hypot(idxTip.x - wrist.x, idxTip.y - wrist.y);
-                    const isExtended = idxLen > (handSize * 0.85);
+                    const rawDist = Math.hypot(thumbTip.x - idxMcp.x, thumbTip.y - idxMcp.y);
+                    const norm = Math.min(rawDist / handSize, 2.0);
 
-                    if (!isExtended) {
-                        handData.isTriggerDown = false;
+                    handData.triggerSmooth = THREE.MathUtils.lerp(handData.triggerSmooth, norm, CONFIG.TRIGGER_SMOOTHING);
+
+                    const now = Date.now();
+                    if (handData.isTriggerDown) {
+                        if (handData.triggerSmooth > CONFIG.TRIGGER_RELEASE_THRESH) {
+                            handData.isTriggerDown = false;
+                        }
                     } else {
-                        const rawDist = Math.hypot(thumbTip.x - idxMcp.x, thumbTip.y - idxMcp.y);
-                        const norm = rawDist / handSize;
-                        handData.triggerSmooth = THREE.MathUtils.lerp(handData.triggerSmooth, norm, CONFIG.TRIGGER_SMOOTHING);
-
-                        const now = Date.now();
-                        if (handData.isTriggerDown) {
-                            if (handData.triggerSmooth > CONFIG.TRIGGER_RELEASE_THRESH) {
-                                handData.isTriggerDown = false;
+                        if (handData.triggerSmooth < CONFIG.TRIGGER_PRESS_THRESH) {
+                            if (now - handData.lastTrigger > CONFIG.TRIGGER_DEBOUNCE) {
+                                fireShot(h);
+                                handData.lastTrigger = now;
                             }
-                        } else {
-                            if (handData.triggerSmooth < CONFIG.TRIGGER_PRESS_THRESH) {
-                                if (now - handData.lastTrigger > CONFIG.TRIGGER_DEBOUNCE) {
-                                    fireShot(h);
-                                    handData.lastTrigger = now;
-                                }
-                                handData.isTriggerDown = true;
-                            }
+                            handData.isTriggerDown = true;
                         }
                     }
                 }
@@ -791,8 +772,8 @@
             }
             els.hand0dot.classList.toggle('inactive', !state.hands[0].active);
             els.hand1dot.classList.toggle('inactive', !state.hands[1].active);
-            els.hand0label.textContent = state.hands[0].active ? 'Hand 1: Active' : 'Hand 1: --';
-            els.hand1label.textContent = state.hands[1].active ? 'Hand 2: Active' : 'Hand 2: --';
+            els.hand0label.textContent = state.hands[0].active ? 'Active' : '--';
+            els.hand1label.textContent = state.hands[1].active ? 'Active' : '--';
         }
 
         function fireShot(handIdx) {
@@ -854,7 +835,8 @@
         }
 
         function renderLoop() {
-            requestAnimationFrame(renderLoop);
+            if (state.gameOver) { state.renderRafId = null; return; }
+            state.renderRafId = requestAnimationFrame(renderLoop);
 
             state.frameCount++;
             const now = Date.now();
@@ -862,18 +844,13 @@
                 state.fps = state.frameCount;
                 state.frameCount = 0;
                 state.fpsTimer = now;
-                if (state.fps < 25) {
-                    state.aiFps = Math.max(15, CONFIG.AI_FPS - 10);
-                } else if (state.fps > 50) {
-                    state.aiFps = Math.min(CONFIG.AI_FPS, state.aiFps + 2);
-                }
+                if (state.fps < 25) state.aiFps = Math.max(15, CONFIG.AI_FPS - 10);
+                else if (state.fps > 50) state.aiFps = Math.min(CONFIG.AI_FPS, state.aiFps + 2);
             }
 
             if (state.startTime && !state.gameOver) {
                 const elapsed = Math.floor((now - state.startTime) / 1000);
-                const m = Math.floor(elapsed / 60);
-                const s = elapsed % 60;
-                els.timer.innerText = m + ':' + String(s).padStart(2, '0');
+                els.timer.innerText = Math.floor(elapsed / 60) + ':' + String(elapsed % 60).padStart(2, '0');
             }
 
             if (state.screenShake > 0) {
@@ -884,10 +861,7 @@
             }
 
             let activeCount = 0;
-            for (const d of state.discs) {
-                d.update();
-                if (d.active) activeCount++;
-            }
+            for (const d of state.discs) { d.update(); if (d.active) activeCount++; }
             els.discCount.innerText = String(activeCount);
 
             state.particles = state.particles.filter(p => {
@@ -915,12 +889,8 @@
 
             for (let h = 0; h < 2; h++) {
                 const flash = muzzleFlashes[h];
-                if (flash.scale.x > 0.01) {
-                    flash.scale.multiplyScalar(0.65);
-                    flash.material.opacity = flash.scale.x;
-                } else {
-                    flash.scale.set(0, 0, 0);
-                }
+                if (flash.scale.x > 0.01) { flash.scale.multiplyScalar(0.65); flash.material.opacity = flash.scale.x; }
+                else { flash.scale.set(0, 0, 0); }
             }
 
             if (bgStars) bgStars.rotation.z += 0.0003;
@@ -954,30 +924,25 @@
 
                     if (targetDisc && closestDist < CONFIG.MAGNETISM_RADIUS) {
                         const proximity = 1 - (closestDist / CONFIG.MAGNETISM_RADIUS);
-                        const magneticFactor = proximity * proximity;
-                        const dynamicStrength = 0.05 + (magneticFactor * CONFIG.MAGNETISM_STRENGTH);
-                        finalPos.lerp(targetDisc.mesh.position, dynamicStrength);
+                        const mf = proximity * proximity;
+                        const ds = 0.05 + (mf * CONFIG.MAGNETISM_STRENGTH);
+                        finalPos.lerp(targetDisc.mesh.position, ds);
 
                         const baseColor = new THREE.Color(CONFIG.RETICLE_COLORS[h]);
-                        const targetColor = targetDisc.isBonus ? new THREE.Color(0xffaa00) : new THREE.Color(0xff0055);
-                        const t = now * 0.008;
-                        const pulseFreq = 1 + (proximity * 5);
-                        const pv = Math.sin(t * pulseFreq);
-                        const fc = baseColor.clone().lerp(targetColor, proximity);
+                        const tgtColor = targetDisc.isBonus ? new THREE.Color(0xffaa00) : new THREE.Color(0xff0055);
+                        const tt = now * 0.008;
+                        const pv = Math.sin(tt * (1 + proximity * 5));
+                        const fc = baseColor.clone().lerp(tgtColor, proximity);
                         if (proximity > 0.8) fc.lerp(new THREE.Color(0xffffff), Math.max(0, pv * 0.3));
                         reticle.material.color.copy(fc);
 
                         const bs = hd.isTriggerDown ? 0.5 : 1.1;
-                        const ps = bs + (magneticFactor * 0.4);
-                        const psc = 1 + (pv * 0.08 * proximity);
-                        reticle.scale.setScalar(ps * psc);
-                        reticle.rotation.z += (0.08 + (proximity * 0.15));
-
+                        reticle.scale.setScalar((bs + mf * 0.4) * (1 + pv * 0.08 * proximity));
+                        reticle.rotation.z += (0.08 + proximity * 0.15);
                         if (proximity > 0.15) hd.lockedTarget = targetDisc;
                     } else {
                         reticle.material.color.setHex(CONFIG.RETICLE_COLORS[h]);
-                        const bs = hd.isTriggerDown ? 0.5 : 0.9;
-                        reticle.scale.setScalar(bs);
+                        reticle.scale.setScalar(hd.isTriggerDown ? 0.5 : 0.9);
                         reticle.rotation.z = 0;
                     }
 
@@ -1001,6 +966,7 @@
         }
 
         els.restartBtn.onclick = restartGame;
+        els.endBtn.onclick = endGame;
 
         initThree();
         initMediaPipe();
